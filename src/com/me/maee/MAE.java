@@ -25,13 +25,13 @@ import com.me.quadtree.QuadTree;
 
 public class MAE implements ApplicationListener {
 
-	public static final int GLOBAL_WIDTH = 600;
-	public static final int GLOBAL_HEIGHT = 500;
+	public static final int GLOBAL_WIDTH = 800;
+	public static final int GLOBAL_HEIGHT = 800;
 	public static final int LIMIT_FPS = 60;
-	public static final int OBJECTS = 30000;
-	public static final float MAX_RADIUS = 10;
-	public static final float MIN_RADIUS = 5;
-	public static final float MAX_VELOCITY = 0;
+	public static final int OBJECTS = 4000;
+	public static final float MAX_RADIUS = 20;
+	public static final float MIN_RADIUS = 1;
+	public static final float MAX_VELOCITY = 30;
 	public static final float MAX_WIDTH = 50;
 	public static final float MAX_HEIGHT = 50;
 	public static final int MAX_DOTS = 6;
@@ -133,22 +133,30 @@ public class MAE implements ApplicationListener {
 	
 	Vec A;
 	boolean Pressed = false ;
+	Body Dragged;
 	
 	private void input() {
 		
 		if(Gdx.input.isButtonPressed(Input.Buttons.LEFT)){
 			if (Pressed){
-				//line.A = c1.getPosition(); // привязка к окружности
-				line.B = pointer;
-				line.draw();
-				//c1.applyImpulse(c1.getPosition().x, c1.getPosition().y, new Vec(line.getdX(),line.getdY()) , (float) 5);
+				if (Dragged != null){
+					line.A = Dragged.getPosition(); // привязка к окружности
+					line.B = pointer;
+					line.draw();
+					Dragged.applyImpulse(Dragged.getPosition().x, Dragged.getPosition().y, new Vec(line.getdX(),line.getdY()) , (float) 5);
+				}
 			} else { 
 				Pressed = true;
 				A = pointer;
 				line = new Line(A,pointer);
-			}
-			
-			
+				for (Body b : quad.retrieve(A, new ArrayList<Body>())){
+					Circle c = (Circle)b; // пускай так
+					if  (Utils.inRange(c.getPosition(), A, c.R)){
+						Dragged = b;
+						break;
+					}
+				}
+		} 
 			// TEST
 			for (Body b : quad.retrieve(pointer,new ArrayList<Body>())){
 				ShapeRenderer sr = new ShapeRenderer();
@@ -158,9 +166,10 @@ public class MAE implements ApplicationListener {
 				sr.end();
 				}
 			
-			
-		} else Pressed = false;
-		
+		} else {
+			Pressed = false;
+			Dragged = null;
+		}
 		if(Gdx.input.isKeyPressed(Input.Keys.S)){
 			c1.applyImpulse(c1.getPosition().x, c1.getPosition().y, new Vec(1,0), 10000);
 		} 
@@ -186,7 +195,7 @@ public class MAE implements ApplicationListener {
 		Iterator<Body> it = Bodies.iterator();
 		while (it.hasNext()){
 			Body b = it.next();
-			if (quad.insert(b))
+			if (quad.insert(b) && b != Dragged)
 				it.remove();
 		}
 		

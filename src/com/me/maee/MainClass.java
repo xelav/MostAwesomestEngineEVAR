@@ -6,8 +6,8 @@ import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 public class MainClass {
 	public static void main(String[] args) {
 			LwjglApplicationConfiguration cfg = new LwjglApplicationConfiguration();
-			cfg.title = "EpicGaem";
-			cfg.useGL20 = false;
+			cfg.title = "EpicEngine";
+			cfg.useGL20 = true;
 			cfg.fullscreen = false;
 			cfg.vSyncEnabled = true;
 			
@@ -39,16 +39,15 @@ public class MainClass {
 //
 //
 //!!!! Вращение
-//!!! АлгоритмЫ проверки коллизий
+//? АлгоритмЫ проверки коллизий
 //!! Доработать вычисление импульса
 //!!! Shape Vs Shape
 //!! Отталкивание от стенок
-//! Нисходящее/восходящее преоброзование Body-Circle - пока что работает
+//!! Добавить больше тестов
 //!! Генератор случайных выпуклых многоугольников
 //! Съезжание линии при малом радиусе
 // Статичные тела
 //Почему-то круг смещается по 0Y на двадцать пикселей вниз - Проблема устранена до тех пор, пока не буду вводить вращения
 //При вызове defineMass() все исчезает - почему-то заработало само собой, после удаления mass из аргументов. Конфликт с defineMass?
-//Поменять float на double - хотя, зачем?
 //Точка рендерится не туда - опять разбираться с системой координат - проблема временно исправлена, но с этим все еще надо разобраться
 //Подумать насчет едениц измерения, в будущем могут быть проблемы с этим
