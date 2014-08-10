@@ -40,10 +40,6 @@ public class Vec {
 		return new Vec(x/a,y/a);
 	}
 	
-	public static Vec getUnitVector(float angle){
-		return new Vec((float) Math.cos(angle),(float) Math.sin(angle));
-	}
-	
 	public static float getLength(Vec v){
 		float x = Math.abs(v.x);
 		float y = Math.abs(v.y);
@@ -57,6 +53,10 @@ public class Vec {
 	public void write(){
 		String s = new String("X: "+x+" ; Y: "+y);
 		System.out.println(s);
+	}
+	public void rotate(float angle){
+		//Вращает радиус-вектор на угол angle в радианах
+		Utils.rotatePoint(angle, new Vec(0,0));
 	}
 	
 }

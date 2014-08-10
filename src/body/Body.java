@@ -14,11 +14,13 @@ public abstract class Body {
 	protected AABB aabb; 
 	protected Vec pos;
 	protected Vec vel;
-	//private float angle;
+	public float R;
+	protected Vec angle;
 	//protected boolean isStatic;
 	public static ShapeRenderer  renderer; // should be protected!
-	public float mass;
-	//protected ShapeRenderer posRenderer;
+	protected float square; 
+	public float mass; //this one too
+	protected static ShapeRenderer posRenderer;
 	
 	public boolean collide;
 	public byte type;

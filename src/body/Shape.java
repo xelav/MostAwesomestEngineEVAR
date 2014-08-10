@@ -2,9 +2,12 @@ package body;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Random;
 
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Vector2;
+import com.me.maee.MAE;
 import com.me.maee.Stats;
 import com.me.maee.Utils;
 import com.me.maee.Vec;
@@ -12,6 +15,7 @@ import com.me.maee.Vec;
 public class Shape extends Body {
 
 	public ArrayList<Vec> points = new ArrayList<Vec>();
+	private ShapeRenderer CircleRenderer;
 	
 	public Shape(ArrayList<Vec> points, Vec pos) {
 		
@@ -23,6 +27,19 @@ public class Shape extends Body {
 		aabb = buildAABB();
 		type = BodyType.SHAPE;
 		
+	}
+public Shape(ArrayList<Vec> points) {
+		
+		this.points = points;
+		setRenderer(); 
+		setVelocity(new Vec());;
+		defineCircle();
+		aabb = buildAABB();
+		type = BodyType.SHAPE;
+		
+	}
+public Shape (){
+	generate();
 	}
 
 	private void defineCircle() {
@@ -52,6 +69,13 @@ public class Shape extends Body {
 		p2 = points.get(0);
 		renderer.line((float)p1.x,(float) p1.y,(float)  p2.x,(float)  p2.y);
 		renderer.end();
+		CircleRenderer.begin(ShapeType.Circle);
+		CircleRenderer.circle(pos.x, pos.y, R);
+		CircleRenderer.end();
+		posRenderer.begin(ShapeType.Point);
+		posRenderer.setColor(0, 1, 0, 1);;
+		posRenderer.point(pos.x, pos.y, 0);
+		posRenderer.end();
 	}
 	
 	@Override
@@ -100,6 +124,7 @@ public class Shape extends Body {
 	@Override
 	public AABB buildAABB() {
 		//! учитываю ориентированость формы, должен быть алгоритм быстрее, хотя сложность та же
+		//System.out.println(points);
 		Vec a = points.get(0);
 		float left = a.x;
 		float right = a.x;
@@ -113,5 +138,101 @@ public class Shape extends Body {
 		}
 		return new AABB(new Vec (left,down), new Vec (right,up));
 	}
+	public void generate(){
+		System.out.println("Generating new shape");
+		Random rand = new Random();
+		
+		float vx,vy;
+		if (rand.nextInt(2) == 1) vx = rand.nextFloat() * MAE.MAX_VELOCITY;
+		else vx = - rand.nextFloat() * MAE.MAX_VELOCITY;
+		if (rand.nextInt(2) == 1) vy = rand.nextFloat() * MAE.MAX_VELOCITY;
+		else vy = - rand.nextFloat() * MAE.MAX_VELOCITY;
+		this.vel = new Vec(vx,vy);
+		
+		
+		float square = 0;
+		Vec pos = new Vec (rand.nextFloat()*MAE.GLOBAL_WIDTH,rand.nextFloat()*MAE.GLOBAL_HEIGHT);
+		R = rand.nextFloat() * (MAE.MAX_RADIUS-MAE.MIN_RADIUS)+MAE.MIN_RADIUS;
+		float angle = (float) (rand.nextFloat()*Math.PI*R*2);
+		int amount = rand.nextInt(MAE.MAX_DOTS-2) + 4 ;
+		System.out.println(amount);
+		ArrayList<Vec> dots = new ArrayList<Vec>();
+		////
+		//генерируем верхнюю половину
+		dots.add(new Vec(pos.x-R,pos.y)); // первая точка, обязательно лежащая на конце диаметра
+		
+		int N = rand.nextInt(amount - 2);
+		System.out.println(" "+amount+" = "+N+" + "+(amount-N-2));
+		
+		float curH = 0;
+		float prevH = 0;
+		float[] K = splitLine(N,R+R);
+		for (int i = 0; i < N; i++){
+			//System.out.println(" "+K[i]);
+			//D = D - D*a;
+			float maxH =(float)Math.sin( (Math.acos( K[i]/R-1 )))*R;
+			//System.out.println(maxH);
+			curH = rand.nextFloat()*maxH;
+			
+			dots.add(new Vec (pos.x+(K[i]-R),pos.y+curH ));
+			//System.out.println("square:"+square);
+			if (i != 0)
+				square = square +  ((prevH+curH)*(K[i]-K[i-1])); // площадь новой трапеции
+			else square = square + ((prevH+curH)*(K[0])*R); 
+			prevH = curH;
+		}
+		////
+		//Теперь нижняя половина
+		dots.add(new Vec(pos.x+R,pos.y));// вторая точка, лежащая на другом конце диаметра
+		square = square; //TODO: еще нужно учесть площадь последнего треугольника
+		K = splitLine(amount - N -2,R+R);
+		for (int i = 0; i <amount - N-2; i++){
+			//System.out.println(" "+K[i]);
+			//D = D - D*a;
+			float maxH =(float)Math.sin( (Math.acos( K[i]/R-1 )))*R;
+			//System.out.println(maxH);
+			curH = rand.nextFloat()*maxH;
+			
+			dots.add(new Vec (pos.x-(K[i]-R),pos.y-curH ));
+		
+			if (i != 0)
+				square = square +  ((prevH+curH)*(K[i]-K[i-1])); // площадь новой трапеции
+			else square = square + ((prevH+curH)*(K[0])*R); 
+			prevH = curH;
+			//System.out.println("square:"+square);
+		}
+		////
+		this.pos = pos;
+		this.angle = Utils.getRadiusVector(angle);
+		rotate(angle);
+		this.points = dots;
+		aabb = buildAABB();
+		type = BodyType.SHAPE;
+		setRenderer();
+		posRenderer = new ShapeRenderer();
+		//System.out.println("square:"+square);
+		mass = square;
+		//System.out.println("Final square:"+square);
+		CircleRenderer= new ShapeRenderer();
+		CircleRenderer.setColor(0.3f, 0.3f, 0.3f, 1);
+	}
 	
+	private static float[] splitLine (int N,float L){
+		//разбиение отрезка на N случайных частей
+		Random rand = new Random();
+		float[] M = new float[N];
+		float[] K = new float[N];
+		float s = 0;
+		for (int i = 0; i < N; i++) {
+			M[i] = rand.nextFloat();
+			s += M[i]; 
+		}
+		float a = 0;
+		for (int i = 0; i < N; i++) {
+			//K[i] = M[i]/s*L; // возвращаются длины отрезков
+			a = a + M[i]/s*L;
+			K[i] = a; // так возращаются положения всех точек относительно "нулевой" 
+		}
+		return K;
+	}
 }

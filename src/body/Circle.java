@@ -7,7 +7,7 @@ import com.me.maee.Vec;
 
 public class Circle extends Body {
 
-	public float R;
+	//public float R;
 	//Конструктор
 	//////////
 	private void Constructor (float x ,float y, Vec vel, Vec F, float R){
@@ -32,6 +32,9 @@ public class Circle extends Body {
 	public Circle (float x,float y, float R, Vec vel){
 		Constructor (x,y, vel, new Vec(0,0), R);
 	}
+	public Circle (Vec pos, float R){
+		Constructor(pos.x,pos.y,new Vec(0,0),new Vec(0,0),R);
+	}
 	///////////
 	
 	public void draw() {
@@ -53,9 +56,7 @@ public class Circle extends Body {
 	public void update(float dT) {
 		updatePosition(dT);
 		aabb = buildAABB();
-		//updateSpeed(dT);
 		//updateRotation(dT);
-		//F = new Vec(0,0);
 		setColor();
 	}
 
@@ -68,7 +69,7 @@ public class Circle extends Body {
 	}
 	@Override
 	public void rotate(float angle) {
-		// TODO Auto-generated method stub
+		Utils.rotatePoint(angle, this.angle);
 	}
 	@Override
 	public AABB buildAABB () {

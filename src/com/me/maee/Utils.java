@@ -1,34 +1,34 @@
 package com.me.maee;
 
-import java.math.BigDecimal;
-
 import body.Circle;
 
-import com.badlogic.gdx.math.MathUtils;
 
 public class Utils {
 	//////////
-	public static Vec rotatePoint(float a, Vec position){
-		return rotatePoint(a,position, new Vec(0,0));
-	}
+	//зачем я написал этот метод?
+	//public static Vec rotatePoint(float a, Vec position){
+		//return rotatePoint(a,position, new Vec(0,0));
+	//}
 
 	public static Vec rotatePoint(float a,Vec p, Vec b){
-		Vec rotatedPoint = rotatePoint2(a,new Vec( p.x-b.x , p.y-b.y));
+		
+		Vec rotatedPoint = rotatePoint(a,new Vec( p.x-b.x , p.y-b.y));
 		return new Vec(rotatedPoint.x+b.x,rotatedPoint.y+b.y);
 	}
 
-	private static Vec rotatePoint2(float a,Vec position){
+	public static Vec rotatePoint(float a,Vec position){
 		//против часовой стрелки!
-		//b -  точка вокруг которой осуществляется вращение
+		//position -  точка вокруг которой осуществляется вращение
+		//a - угол в радианах
 		float x2,y2;
-		x2 = position.x * MathUtils.cos(a) - position.y * MathUtils.sin(a);
-		y2 = position.x * MathUtils.sin(a) + position.y * MathUtils.cos(a);
+		x2 = (float) (position.x * Math.cos(a) - position.y * Math.sin(a));
+		y2 = (float) (position.x * Math.sin(a) + position.y * Math.cos(a));
 		return new Vec(x2,y2);
 	}
 	//////////////
 	//еще не тестил их, могут быть ошибки
 	public static Vec getUnitVector(float angle){
-		return new Vec(MathUtils.cos(angle),MathUtils.sin(angle));
+		return new Vec((float)Math.cos(angle),(float)Math.sin(angle));
 	}
 	
 	public static Vec getUnitVector(Vec V){
@@ -50,6 +50,9 @@ public class Utils {
 	}
 	
 	return a;
+	}
+	public static Vec getRadiusVector(float angle){
+		return new Vec((float) Math.cos(angle),(float) Math.sin(angle));
 	}
 	////////////
 	public static float getLength(Vec A, Vec B){
@@ -145,10 +148,4 @@ public class Utils {
 	public static boolean between (float x1, float a, float x2){
 		return ((x1<=a)&&(a<=x2)) | ((x2<=a)&&(a<=x1));
 	}
-		
-	//////////
-		public static BigDecimal BG (float Num){
-			return new BigDecimal(Num);
-		}
-	/////////
 }

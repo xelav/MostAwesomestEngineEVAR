@@ -28,13 +28,13 @@ public class MAE implements ApplicationListener {
 	public static final int GLOBAL_WIDTH = 800;
 	public static final int GLOBAL_HEIGHT = 800;
 	public static final int LIMIT_FPS = 60;
-	public static final int OBJECTS = 4000;
+	public static final int OBJECTS = 1000;
 	public static final float MAX_RADIUS = 20;
-	public static final float MIN_RADIUS = 1;
-	public static final float MAX_VELOCITY = 30;
+	public static final float MIN_RADIUS = 10;
+	public static final float MAX_VELOCITY = 10;
 	public static final float MAX_WIDTH = 50;
 	public static final float MAX_HEIGHT = 50;
-	public static final int MAX_DOTS = 6;
+	public static final int MAX_DOTS = 8;
 	
 	public static ArrayList<Body> Bodies = new ArrayList<Body>();
 	public static java.util.Iterator<Body> it;
@@ -84,14 +84,8 @@ public class MAE implements ApplicationListener {
 		*/
 	
 		for (int i = 1; i <= OBJECTS/2; i++) {
-			float width, height;
-			Random rand = new Random();
-			Vec pos = new Vec (rand.nextFloat()*GLOBAL_WIDTH,rand.nextFloat()*GLOBAL_HEIGHT);
-			width = rand.nextFloat()*MAX_WIDTH;
-			height = rand.nextFloat()*MAX_HEIGHT;
-			int dots = rand.nextInt(MAX_DOTS) ;
+			Bodies.add(new Shape());
 		}
-		
 		for (int i = 1; i <= OBJECTS/2; i++){
 			float x,y,r,vx,vy;
 			Random rand = new Random();
@@ -150,8 +144,9 @@ public class MAE implements ApplicationListener {
 				A = pointer;
 				line = new Line(A,pointer);
 				for (Body b : quad.retrieve(A, new ArrayList<Body>())){
-					Circle c = (Circle)b; // пускай так
-					if  (Utils.inRange(c.getPosition(), A, c.R)){
+					//if (b.type = BodyType.SHAPE) break;
+					//Circle c = (Circle)b; // пускай так
+					if  (Utils.inRange(b.getPosition(), A, b.R)){
 						Dragged = b;
 						break;
 					}
@@ -162,7 +157,7 @@ public class MAE implements ApplicationListener {
 				ShapeRenderer sr = new ShapeRenderer();
 				sr.begin(ShapeType.Circle);
 				sr.setColor(0.8f, 0.3f, 0.3f, 1);
-				sr.circle(b.getPosition().x, b.getPosition().y, b.getRect().width/2+1);
+				sr.circle(b.getPosition().x, b.getPosition().y, b.R);
 				sr.end();
 				}
 			

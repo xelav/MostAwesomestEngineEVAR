@@ -116,18 +116,22 @@ public class Collision {
 	////////////
 	//Shape-Shape
 	protected static boolean shapesIntersects(Shape s2, Shape s1){
-
-		for (int i = 0; i <= s1.points.size()-1; i++){
-			for (int j = 0; i <= s2.points.size()-1; j++){
+		//System.out.println(s1.points.size()+" "+s2.points.size());
+		/*
+		for (int i = 0; i < s1.points.size()-1; i++){
+			for (int j = 0; i < s2.points.size()-1; j++){
 				if (linesIntersects(s1.points.get(i),s2.points.get(j),s1.points.get(i+1),s2.points.get(j+1))) return true;
 			}
 		}
+		*/
 		return false;
 	}
 ////////////
 //Circle-Shape
 	protected static boolean circleVsShape(Circle c, Shape s){
 		//! Ќе работает в случае когда круг внутри
+		if (!circlesIntersects(c,new Circle(s.getPosition(),s.R))) return false;
+		
 		
 		for (int i = 0; i<s.points.size()-1; i++){
 			if (circleVsLine(c,s.points.get(i),s.points.get(i+1))){

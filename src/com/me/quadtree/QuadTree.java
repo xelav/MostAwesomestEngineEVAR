@@ -16,8 +16,9 @@ import com.me.maee.Vec;
 public class QuadTree {
 	
 	public static int i;
-	private static final int MAX_OBJECTS = 3;
-	private static final int MAX_LEVELS =4;
+	//Совершенно ненужные константы
+	//private static final int MAX_OBJECTS = 3;
+	//private static final int MAX_LEVELS =4;
 	
 	 private int level;
 	 public List<Body> objects;
