@@ -1,25 +1,33 @@
 package body;
 
+import java.util.Random;
+
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
+import com.me.maee.MAE;
 import com.me.maee.Utils;
 import com.me.maee.Vec;
 
 public class Circle extends Body {
-
-	//public float R;
+	
+	Vec AnglePoint = new Vec();
+	
 	//Конструктор
 	//////////
 	private void Constructor (float x ,float y, Vec vel, Vec F, float R){
+		density = new Random().nextFloat();
 		setPosition(new Vec(x,y));
-		//setRenderer();
 		setVelocity(vel);
 		this.R = R;
-		mass = defineMass();
+		mass = defineSquare()*(MAE.MASS_COEFFICIENT*density);
+		System.out.println(mass);
 		aabb = buildAABB();
-		//posRenderer= new ShapeRenderer();
-		//posRenderer.setColor(0,1,0,1);
+		angle = (float) (new Random().nextFloat()*(Math.PI+Math.PI));
+		AnglePoint = new Vec ( Math.cos(angle)*R, Math.sin(angle)*R );
+		rotationSpeed = new Random().nextFloat()*MAE.MAX_ROTATION_SPEED;
 		type = BodyType.CIRCLE;
+		
+		renderer.setColor(1,1,1,density);
 	}
 	public Circle (){
 		Constructor (0,0,new Vec(0,0) , new Vec(0,0), 1);
@@ -43,20 +51,29 @@ public class Circle extends Body {
 		renderer.begin(ShapeType.Circle);
 		renderer.circle(getPosition().x, getPosition().y, R);
 		renderer.end();
-		//posRenderer.begin(ShapeType.Point);
-		//posRenderer.point(pos.x, pos.y, 0);
-		//posRenderer.end();
+		angleRenderer.begin(ShapeType.Line);
+		//System.out.println((float) Math.cos(angle)+" "+pos.x);
+		angleRenderer.line(pos.x, pos.y,(float) Math.cos(angle)*R+pos.x,(float)  Math.sin(angle)*R+pos.y); // !!! Слишком много рассчетов
+		angleRenderer.end();
+		posRenderer.begin(ShapeType.Point);
+		posRenderer.point(pos.x, pos.y, 0);
+		posRenderer.end();
 
 	}
 	
 	private void updatePosition(float dT){
 		setPosition(pos.add(vel.scl(dT)));
 	}
+	private void updateRotation(float dT){
+		//rotate (dT*rotationSpeed);
+		angle += dT*rotationSpeed;
+	}
 	
 	public void update(float dT) {
+		//gravity();
 		updatePosition(dT);
 		aabb = buildAABB();
-		//updateRotation(dT);
+		updateRotation(dT);
 		setColor();
 	}
 
@@ -69,7 +86,8 @@ public class Circle extends Body {
 	}
 	@Override
 	public void rotate(float angle) {
-		Utils.rotatePoint(angle, this.angle);
+		this.angle += angle;
+		if (this.angle >= Math.PI*2) this.angle -= Math.PI*2;
 	}
 	@Override
 	public AABB buildAABB () {

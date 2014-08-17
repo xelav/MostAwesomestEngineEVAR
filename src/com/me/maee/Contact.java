@@ -1,6 +1,9 @@
 package com.me.maee;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 
 import body.Body;
 import body.BodyType;
@@ -9,18 +12,19 @@ import body.Shape;
 
 public class Contact {
 	
+	public static ShapeRenderer contactRenderer = new ShapeRenderer();
+	
 	public final int type;
 	public final static int CIRCLE_VS_CIRCLE = 1;
 	public final static int CIRCLE_VS_SHAPE = 2;
 	public final static int SHAPE_VS_SHAPE = 3;
-	
-	public final static float Resilience = 0.6f;
 	
 	//private int i1;
 	//private int i2;
 	public Body b1;
 	public Body b2;
 	
+	public float rotationImpulse;
 	public Vec normal;
 	public float depth;
 	
@@ -40,6 +44,8 @@ public class Contact {
 	} 
 	
 	public void resolve (){
+		draw();
+		
 		int type1 = b1.type;
 		int type2 = b2.type;
 		if (type1 == BodyType.CIRCLE) {
@@ -48,26 +54,38 @@ public class Contact {
 			} else circleVsShape ((Circle)b1,(Shape)b2);
 		} else  if (type2 == BodyType.CIRCLE){
 			circleVsShape ((Circle)b2,(Shape)b1);
-		} else shapesIntersects();
+		} else shapeVsShape();
 		
+	}
+	
+	private void draw(){
+		contactRenderer.setColor(Color.GREEN);
+		contactRenderer.begin(ShapeType.Line);
+		contactRenderer.line(normal.x, normal.y, normal.x, normal.y);
+		contactRenderer.end();
 	}
 	
 	private void circlesIntersects(){
 		Circle c1 = (Circle)b1;
 		Circle c2 = (Circle)b2;
 		
-		float impulse = getImpulse(normal, depth, c1.getVelocity(), c2.getVelocity(), c1.mass, c2.mass);
+		float impulse = getImpulse(normal, depth, c1.getVelocity(), c2.getVelocity(), c1.getMass(), c2.getMass());
 		c1.applyImpulse(c1.getPosition().x, c1.getPosition().y, normal, -impulse);
 		c2.applyImpulse(c2.getPosition().x, c2.getPosition().y, normal, impulse);
 	}
-	private void shapesIntersects(){
-		
-	}
 	private void circleVsShape(Circle c, Shape s){
 		
-		float impulse = getImpulse(normal, depth, c.getVelocity(), s.getVelocity(), c.mass, s.mass);
-		//c.applyImpulse(c.getPosition().x, c.getPosition().y, normal, -impulse);
+		float impulse = getImpulse(normal, depth, c.getVelocity(), s.getVelocity(), c.getMass(), s.getMass());
+		c.applyImpulse(c.getPosition().x, c.getPosition().y, normal, -impulse);
 		//s.applyImpulse(s.getPosition().x, s.getPosition().y, normal, impulse);
+	}
+	private void shapeVsShape(){
+		Shape s1 = (Shape)b1;
+		Shape s2 = (Shape)b2;
+		
+		float impulse = getImpulse(normal, depth, s1.getVelocity(), s1.getVelocity(), s1.getMass(), s2.getMass());
+		s1.applyImpulse(s1.getPosition().x, s1.getPosition().y, normal, -impulse);
+		s2.applyImpulse(s2.getPosition().x, s2.getPosition().y, normal, impulse);
 	}
 	
 	private static float getImpulse(Vec normal, float depth,Vec v1,Vec v2, float m1, float m2){
@@ -79,7 +97,7 @@ public class Contact {
 		//TODO: ”пругий удар
 		if (Vab < 0 ) return 0;
 		if (Vab == 0) return - m1*m2/(m1+m2) *depth;
-		float p = m1*m2/(m1+m2) * (1+Resilience) * Vab;
+		float p = m1*m2/(m1+m2) * (1+MAE.RESILIENCE) * Vab;
 		p = p + m1*m2/(m1+m2) * depth * 0.6f ;
 		Vec imp2 = v1.scl(m1).add(v2.scl(m2));
 		//imp1.write();

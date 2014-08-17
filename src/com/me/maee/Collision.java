@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.badlogic.gdx.Gdx;
 
+import body.AABB;
 import body.Body;
 import body.BodyType;
 import body.Circle;
@@ -80,6 +81,22 @@ public class Collision {
 		for (Contact c :contacts) c.resolve();
 	}
 	
+	public static boolean preDetect (Body b1, Body b2){
+		if (checkRects (b1.getRect(),b2.getRect()))
+			if (b1.R != 0 && b2.R != 0)
+				return circlesIntersects (b1,b2);
+			else {
+				if (b1.type == BodyType.CIRCLE) {
+					if ( b2.type == BodyType.CIRCLE)  return circlesIntersects((Circle) b1,(Circle) b2);
+					else return circleVsShape((Circle)b1, (Shape)b2);
+				} else { 
+					if ( b2.type == BodyType.CIRCLE) return circleVsShape((Circle)b2,(Shape) b1);
+					else return shapesIntersects((Shape)b2,(Shape) b1);
+				}
+			}
+		else return false;
+	}
+	
 	////////////
 	public static boolean detectColl(Body b1, Body b2){
 		count++;
@@ -89,7 +106,11 @@ public class Collision {
 			cor++;
 			return false;
 		}
+		
+		coll = preDetect(b1,b2);
+		
 		//System.out.println(b1.getPosition().x+" "+b2.getPosition().x);
+		/*
 		if (b1.type == BodyType.CIRCLE) {
 			if ( b2.type == BodyType.CIRCLE)  coll = circlesIntersects((Circle) b1,(Circle) b2);
 			else coll = circleVsShape((Circle)b1, (Shape)b2);
@@ -97,6 +118,7 @@ public class Collision {
 			if ( b2.type == BodyType.CIRCLE) coll = circleVsShape((Circle)b2,(Shape) b1);
 			else coll = shapesIntersects((Shape)b2,(Shape) b1);
 		}
+		*/
 		//System.out.println(b1+" "+b2);
 		if (coll)
 			setColor(b1,b2,true);
@@ -116,22 +138,20 @@ public class Collision {
 	////////////
 	//Shape-Shape
 	protected static boolean shapesIntersects(Shape s2, Shape s1){
-		//System.out.println(s1.points.size()+" "+s2.points.size());
-		/*
+		//System.out.println("--- Shapes intersection: "+s1.points.size()+" "+s2.points.size()+"---");
 		for (int i = 0; i < s1.points.size()-1; i++){
-			for (int j = 0; i < s2.points.size()-1; j++){
-				if (linesIntersects(s1.points.get(i),s2.points.get(j),s1.points.get(i+1),s2.points.get(j+1))) return true;
+			for (int j = 0; j < s2.points.size()-1; j++){
+				//System.out.println(i+" "+j);
+				if (Utils.linesIntersects(s1.points.get(i),s2.points.get(j),s1.points.get(i+1),s2.points.get(j+1))) return true;
 			}
 		}
-		*/
 		return false;
 	}
 ////////////
 //Circle-Shape
 	protected static boolean circleVsShape(Circle c, Shape s){
 		//! Ќе работает в случае когда круг внутри
-		if (!circlesIntersects(c,new Circle(s.getPosition(),s.R))) return false;
-		
+		//if (!circlesIntersects(c,new Circle(s.getPosition(),s.R))) return false;
 		
 		for (int i = 0; i<s.points.size()-1; i++){
 			if (circleVsLine(c,s.points.get(i),s.points.get(i+1))){
@@ -148,11 +168,6 @@ public class Collision {
 		return false;
 	}
 ////////////
-	public static Vec getNormal(Vec a, Vec b){
-		//получение нормали дл€ случа€ столкновени€ окружностей
-		return new Vec(a.x-b.x,a.y-b.y);
-	}
-////////////
 	//Circle - Line
 	public static boolean circleVsLine(Circle c, Vec A, Vec B) {
 		return circleVsLine(c.getPosition().x,c.getPosition().y,c.R,A,B);
@@ -162,6 +177,9 @@ public class Collision {
 		//¬се работает
 		
 		//проверка пересечени€ с пр€мой
+		//System.out.println(x+" "+y+" "+R);
+		//A.write();
+		//B.write();
 		float dis = Utils.getDistance (A,B,new Vec (x,y));
 		dis = Math.abs(dis);
 		if (dis > R){
@@ -197,90 +215,40 @@ public class Collision {
 	}
 
 	////////////
-	protected static boolean AABBvsAABB(Vec oneA, Vec oneB, Vec twoA, Vec twoB ){
-		if ((oneA.x < twoB.x) && (oneB.y>oneA.y)) {return true;}
+	private static boolean checkRects(AABB rect1, AABB rect2){
+		//! This method will be called very often
+		if (rect1.x + rect1.width > rect2.x)
+			if (rect1.y + rect1.height > rect2.y || rect2.y + rect2.height > rect1.y) return true;
+		if (rect2.x + rect1.width > rect1.x)
+			if (rect2.y + rect2.height > rect1.y || rect1.y + rect1.height > rect2.y) return true;
 		return false;
 	}
 	///////////
 	//Circle-Circle
-	public static boolean circlesIntersects(Circle c1, Circle c2){
-		float dX = c1.getPosition().x - c2.getPosition().x;
-		float dY = c1.getPosition().y - c2.getPosition().y;
-		float dis = c1.R + c2.R;
-		//System.out.println(c2);
-		//c2.getPosition().write();
-		//System.out.println(""+dX+" "+dY);
-		//System.out.println(" "+(dis*dis)+" , "+(dX*dX+dY*dY));
+	public static boolean circlesIntersects(Body b1, Body b2){
+		float dX = b1.getPosition().x - b2.getPosition().x;
+		float dY = b1.getPosition().y - b2.getPosition().y;
+		float dis = b1.R + b2.R;
 		if (dX*dX+dY*dY>dis*dis) {
 			return false;
 		} else {
-			Vec normal = getNormal(c1.getPosition(),c2.getPosition());
-			//normal.write();
-			contacts.add(new Contact(Utils.getUnitVector(normal), normal.getLength(), c1 , c2, Contact.CIRCLE_VS_CIRCLE));
-			return true;
+			if (b1.type == BodyType.CIRCLE && b2.type == BodyType.CIRCLE){
+				Vec normal = new Vec(b1.getPosition(),b2.getPosition());
+				//normal.write();
+				
+				b1.applyAngularImpulse( Utils.getNormal(new Vec(normal),new Vec(b1.getVelocity()).add(b2.getVelocity())));
+				b2.applyAngularImpulse( -Utils.getNormal(new Vec(normal),new Vec(b1.getVelocity()).add(b2.getVelocity())));
+				contacts.add(new Contact(Utils.getUnitVector(normal), normal.getLength(), b1 , b2, Contact.CIRCLE_VS_CIRCLE));
+				return true;
+			}
+			if (b1.type == BodyType.CIRCLE && b2.type == BodyType.SHAPE)
+				return circleVsShape((Circle)b1,(Shape)b2);
+			if (b2.type == BodyType.CIRCLE && b1.type == BodyType.SHAPE)
+				return circleVsShape((Circle)b2,(Shape)b1);
+			if (b1.type == BodyType.SHAPE && b2.type == BodyType.SHAPE)
+				return shapesIntersects((Shape)b1,(Shape)b2);
+			else return false;
+			
 		}
-	}
-//////////
-	/*public static boolean linesIntersects(Vec a1, Vec a2, Vec b1, Vec b2){
-		// проверка скрещивани€ линий AB1 и AB2
-		// Ќаходим общую точку, смотрим принадлежит ли она данным отрезкам. ќднако проблематично вычисл€ть общую точку
-		
-		float dY1 = b1.y - a1.y;
-		float dX1 = b1.x - a1.x;
-		float k1 = dY1/dX1;
-		float m1 = a1.y - a1.x*k1;
-		
-		float dY2 = b2.y - a2.y;
-		float dX2 = b2.x - a2.x;
-		float k2 = dY2/dX2;
-		float m2 = a2.y - a2.x*k2;
-		
-		if (k1 != k2 && m1 != m2){
-			
-			float x = (m1-m2)/(k2-k1);
-			float y = (k2*m1 - k1*m2)/(k2-k1);
-			Vec A = new Vec (x,y);
-			boolean ab1 = Utils.pointBelongsToSection(a1, b1, A);
-			boolean ab2 = Utils.pointBelongsToSection(a2, b2, A);
-			Stats.write(ab1 , ab2 );
-			return(ab1 && ab2);
-			
-		} else {
-			System.out.println("--------");
-			System.out.println(""+k1+" "+k2);
-			return false;
-		}
-		
-	}*/
-	public static boolean linesIntersects(Vec a1, Vec a2, Vec b1, Vec b2){
-		//–аботает намного лучше
-		//!  ’от€ случай когда отрезки на одной пр€мой всегда будет выдавать false
-		float disA = Utils.getDistance(a2, b2, a1);
-		float disB = Utils.getDistance(a2, b2, b1);
-		boolean a = (disA/Math.abs(disA) != disB/Math.abs(disB));
-		
-		disA = Utils.getDistance(a1, b1, a2);
-		disB = Utils.getDistance(a1, b1, b2);
-		boolean b = (disA/Math.abs(disA) != disB/Math.abs(disB));
-		
-		return (a && b);
-	}
-	public static Vec getIntersectionPoint (Vec a1 , Vec a2 , Vec b1 , Vec b2){
-			//Ѕлизко, но неправильно. ѕолучаетс€ точка пересечени€ с линией с отклоением.
-			float dY1 = b1.y - a1.y;
-			float dX1 = b1.x - a1.x;
-			float k1 = dY1/dX1;
-			float m1 = a1.y - a1.x*k1;
-			
-			float dY2 = b2.y - a2.y;
-			float dX2 = b2.x - a2.x;
-			float k2 = dY2/dX2;
-			float m2 = a2.y - a2.x*k2;
-			
-			float x = (m1-m2)/(k2-k1);
-			float y = (k2*m1 - k1*m2)/(k2-k1);
-			
-			return new Vec (x,y);
-		
 	}
 }

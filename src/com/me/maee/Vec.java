@@ -7,6 +7,11 @@ public class Vec {
 		x = 0;
 		y = 0;
 	}
+	public Vec (double x, double y){
+		this.x = (float) x;
+		this.y = (float) y;
+	}
+	
 	public Vec (Vec v1, Vec v2){
 		x = v1.x-v2.x;
 		y = v1.y-v2.y;

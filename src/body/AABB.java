@@ -7,16 +7,17 @@ import com.me.maee.Vec;
 
 public class AABB{
 	
-	public Vec one, two;
+	//public Vec one;
+	public float x , y;
 	public static ShapeRenderer  sr;
 	public float width;
 	public float height;
 	
 	
 	private void constructor (Vec one, Vec two){
-		this.one = one;
-		this.two = two;
-		
+		x = one.x;
+		y = one.y;
+
 		sr.setColor(0.3f, 0.3f, 0.3f, 1);
 		width = two.x-one.x;
 		height = two.y-one.y;
@@ -40,15 +41,8 @@ public class AABB{
 	
 	public void draw() {
 		sr.begin(ShapeType.Rectangle);
-		sr.rect(one.x, one.y, width, height);
+		sr.rect(x,y, width, height);
 		sr.end();
-	}
-
-	public void write() {
-		System.out.println("AABB" );
-		one.write();
-		two.write();
-		
 	}
 	public void setColorRed(){
 		sr.setColor(0.7f, 0.7f, 0.7f, 1);

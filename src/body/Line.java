@@ -5,6 +5,9 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.me.maee.Vec;
 
 public class Line {
+	/*
+	 *  Used only for drawing line
+	 */
 	
 	ShapeRenderer renderer;
 	public Vec A;
@@ -24,8 +27,6 @@ public class Line {
 	}
 
 	public void draw() {
-		//A.write();
-		//B.write();
 		renderer.begin(ShapeType.Line);
 		renderer.line(A.x, A.y, B.x, B.y);
 		renderer.end();

@@ -2,6 +2,7 @@ package body;
 
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
+import com.me.maee.MAE;
 import com.me.maee.Stats;
 import com.me.maee.Vec;
 
@@ -26,7 +27,7 @@ public class Point extends Body {
 		renderer.begin(ShapeType.Point);
 		renderer.setColor(1, 0, 0, 1);
 		Stats.render();
-		//Stats.write(new float[]{MAE.GLOBAL_HEIGHT,pos.y}, 9); //почему-то без этого не работает, так что Ќ≈ “–ќ√ј“№ - “”“ ћј√»я
+		Stats.write(new float[]{MAE.GLOBAL_HEIGHT,pos.y}, 9); //почему-то без этого не работает, так что Ќ≈ “–ќ√ј“№ - “”“ ћј√»я
 		renderer.point(pos.x,pos.y, 0);
 		renderer.end();
 	}
@@ -34,25 +35,30 @@ public class Point extends Body {
 	private void updatePosition(float dT){
 		this.pos = pos.add(vel.scl(dT));
 	}
-	
-	private void updateSpeed(float dT){
-		Vec imp = F.div(mass);
-		this.vel = vel.add(imp);
-	}
 	private void updateRotation(float dT){
 		
 	}
 	public void update(float dT){
 		updatePosition(dT);
-		updateSpeed(dT);
 		updateRotation(dT);
-		F = new Vec(0,0);
+
 	}
 
 	@Override
 	public float defineSquare() {
 		// TODO Auto-generated method stub
 		return 0;
+	}
+
+	@Override
+	protected void rotate(float angle) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected AABB buildAABB() {
+		return null;
 	}
 	
 }

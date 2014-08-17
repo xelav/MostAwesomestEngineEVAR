@@ -22,8 +22,8 @@ public class QuadTree {
 	
 	 private int level;
 	 public List<Body> objects;
-	 private AABB bounds;
-	 private QuadTree[] nodes;
+	 public AABB bounds;
+	 public QuadTree[] nodes;
 	 public boolean clicked; //test only
 	 //private ShapeRenderer renderer;
 	 
@@ -60,8 +60,8 @@ public class QuadTree {
 		 //bounds.write();
 		 float width = bounds.width / 2;
 		 float height = bounds.height / 2;
-		 float x = bounds.one.x;
-		 float y = bounds.one.y;
+		 float x = bounds.x;
+		 float y = bounds.y;
 		 //System.out.println("X:"+x+"  Y:"+y);
 		 //System.out.println("Width:"+width+"  Height:"+height);
 		 
@@ -77,14 +77,14 @@ public class QuadTree {
 		  * ! Тело обязательно должно лежать в квадрате
 		  */
 		 int index = -1;
-		 float midX = bounds.one.x + (bounds.width / 2);
-		 float midY = bounds.one.y + (bounds.height / 2);
+		 float midX = bounds.x + (bounds.width / 2);
+		 float midY = bounds.y + (bounds.height / 2);
 		  
-		 boolean TopQuad = (body.one.y > midY) && (body.two.y > midY);
-		 boolean BotQuad = (body.one.y < midY) && (body.two.y < midY);
+		 boolean TopQuad = (body.y > midY) && (body.y + body.height > midY);
+		 boolean BotQuad = (body.y < midY) && (body.y + body.height < midY);
 		 if (TopQuad || BotQuad){
-			boolean LeftQuad = (body.one.x < midX) && (body.two.x < midX);
-			boolean RightQuad = (body.one.x > midX) && (body.two.x > midX);
+			boolean LeftQuad = (body.x < midX) && (body.x + body.width < midX);
+			boolean RightQuad = (body.x > midX) && (body.x + body.width > midX);
 			if (LeftQuad || RightQuad){
 				if (TopQuad)
 					if (RightQuad) return 0;
@@ -96,8 +96,8 @@ public class QuadTree {
 		 return index;
 	 }
 	 public int getIndex (Vec point){
-		 float midX = bounds.one.x + (bounds.width / 2);
-		 float midY = bounds.one.y + (bounds.height / 2);
+		 float midX = bounds.x + (bounds.width / 2);
+		 float midY = bounds.y + (bounds.height / 2);
 		 boolean TopQuad = (point.y > midY);
 		 boolean RightQuad = (point.x > midX);
 		 if (TopQuad) {
@@ -114,11 +114,11 @@ public class QuadTree {
 	  */
 	 public boolean insert (Body body){
 		 //проверка, что объект не вышел за пределы
-		 //Возращает true, если вышел
-		 if (body.getRect().one.x > bounds.two.x || body.getRect().two.x < bounds.one.x ) {
+		 //return true, if object out of boundaries
+		 if (body.getRect().x > bounds.x+bounds.width || body.getRect().x+bounds.width < bounds.x ) {
 			return true;
 		 }
-		 if (body.getRect().one.y > bounds.two.y || body.getRect().two.y < bounds.one.y ) {
+		 if (body.getRect().y > bounds.y + bounds.height || body.getRect().y + bounds.height < bounds.y ) {
 			return true;
 		 }
 		 
@@ -208,7 +208,7 @@ public class QuadTree {
 	public void write () {
 		System.out.println(" "+level+": ");
 		for (int i = 0; i < objects.size(); i++){
-			//System.out.println(objects.get(i));
+			System.out.println(objects.get(i));
 		}
 		if (nodes[0] != null)
 		for (int i = 0; i <= 3; i++){
@@ -225,7 +225,7 @@ public class QuadTree {
 			ShapeRenderer renderer = new ShapeRenderer();
 			renderer.setColor(0.8f,0.3f,0.3f,1);
 			renderer.begin(ShapeType.Rectangle);
-			renderer.rect(bounds.one.x-1, bounds.one.y-1, bounds.width+2, bounds.height+2);
+			renderer.rect(bounds.x-1, bounds.y-1, bounds.width+2, bounds.height+2);
 			renderer.end();
 			
 			return obj;

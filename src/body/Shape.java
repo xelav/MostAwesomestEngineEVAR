@@ -17,33 +17,46 @@ public class Shape extends Body {
 	public ArrayList<Vec> points = new ArrayList<Vec>();
 	private ShapeRenderer CircleRenderer;
 	
-	public Shape(ArrayList<Vec> points, Vec pos) {
-		
+	private void constructor(ArrayList<Vec> points, Vec pos,Vec vel, float mass, Vec angle ){
+		this.renderer = new ShapeRenderer();
+		this.vel = vel;
+		this.pos = pos;
 		this.points = points;
-		this.pos = new Vec(pos.x,pos.y);
-		setRenderer(); 
-		setVelocity(new Vec());;
-		defineCircle();
-		aabb = buildAABB();
+		this.mass = mass;
+		
 		type = BodyType.SHAPE;
+		aabb = buildAABB();
+		
+		if (R != 0) {
+			CircleRenderer = new ShapeRenderer();
+			CircleRenderer.setColor(0.2f, 0.2f, 0.2f, 1f);
+		}
+		posRenderer = new ShapeRenderer();
 		
 	}
-public Shape(ArrayList<Vec> points) {
-		
-		this.points = points;
-		setRenderer(); 
-		setVelocity(new Vec());;
-		defineCircle();
-		aabb = buildAABB();
-		type = BodyType.SHAPE;
-		
+	
+	
+	public Shape(ArrayList<Vec> points, Vec pos, float mass) {
+		constructor(points,pos,new Vec(),mass,new Vec());
 	}
-public Shape (){
-	generate();
+	public Shape(ArrayList<Vec> points, Vec pos, float mass, float angle){
+		constructor (points,pos, new Vec(), mass, Utils.getRadiusVector(angle));
+	}
+	public Shape (ArrayList<Vec> points, Vec pos, Vec vel, float mass, float angle){
+		constructor (points,pos, vel, mass, Utils.getRadiusVector(angle));
+	}
+	public Shape (ArrayList<Vec> points, Vec pos, Vec vel, float mass){
+		constructor (points,pos, vel, mass, new Vec());
+	}
+	
+	public Shape (){
+		//generate(); // Algorhytm, generating ugly, angular shapes
+		generate2();
 	}
 
 	private void defineCircle() {
-		//определение описывающего круга
+		//define circumscribed circle
+		//Why? In hail of Satan of course!
 	}
 
 	int n;
@@ -56,6 +69,7 @@ public Shape (){
 	public void draw() {
 		//System.out.println("=====");
 		aabb.draw();
+		setColor();
 		renderer.begin(ShapeType.Line);
 		Vec p1;
 		Vec p2;
@@ -69,9 +83,11 @@ public Shape (){
 		p2 = points.get(0);
 		renderer.line((float)p1.x,(float) p1.y,(float)  p2.x,(float)  p2.y);
 		renderer.end();
-		CircleRenderer.begin(ShapeType.Circle);
-		CircleRenderer.circle(pos.x, pos.y, R);
-		CircleRenderer.end();
+		if (CircleRenderer != null) {
+			CircleRenderer.begin(ShapeType.Circle);
+			CircleRenderer.circle(pos.x, pos.y, R);
+			CircleRenderer.end();
+		}
 		posRenderer.begin(ShapeType.Point);
 		posRenderer.setColor(0, 1, 0, 1);;
 		posRenderer.point(pos.x, pos.y, 0);
@@ -80,16 +96,9 @@ public Shape (){
 	
 	@Override
 	public void update(float deltaTime) {
-		//pos.write();
-		
 		updateRotation(deltaTime);
 		updatePosition(deltaTime);
-		setColor();
 		aabb = buildAABB();
-	}
-	
-	private void updateRotation(float dTime){
-		
 	}
 	
 	private void updatePosition(float dTime){
@@ -123,7 +132,7 @@ public Shape (){
 
 	@Override
 	public AABB buildAABB() {
-		//! учитываю ориентированость формы, должен быть алгоритм быстрее, хотя сложность та же
+		//! учитывая ориентированость формы, должен быть алгоритм быстрее, хотя сложность та же
 		//System.out.println(points);
 		Vec a = points.get(0);
 		float left = a.x;
@@ -138,8 +147,9 @@ public Shape (){
 		}
 		return new AABB(new Vec (left,down), new Vec (right,up));
 	}
-	public void generate(){
-		System.out.println("Generating new shape");
+	/*
+	private void generate(){
+		//System.out.println("Generating new shape");
 		Random rand = new Random();
 		
 		float vx,vy;
@@ -147,22 +157,20 @@ public Shape (){
 		else vx = - rand.nextFloat() * MAE.MAX_VELOCITY;
 		if (rand.nextInt(2) == 1) vy = rand.nextFloat() * MAE.MAX_VELOCITY;
 		else vy = - rand.nextFloat() * MAE.MAX_VELOCITY;
-		this.vel = new Vec(vx,vy);
-		
 		
 		float square = 0;
 		Vec pos = new Vec (rand.nextFloat()*MAE.GLOBAL_WIDTH,rand.nextFloat()*MAE.GLOBAL_HEIGHT);
 		R = rand.nextFloat() * (MAE.MAX_RADIUS-MAE.MIN_RADIUS)+MAE.MIN_RADIUS;
 		float angle = (float) (rand.nextFloat()*Math.PI*R*2);
 		int amount = rand.nextInt(MAE.MAX_DOTS-2) + 4 ;
-		System.out.println(amount);
+		//System.out.println(amount);
 		ArrayList<Vec> dots = new ArrayList<Vec>();
 		////
 		//генерируем верхнюю половину
 		dots.add(new Vec(pos.x-R,pos.y)); // первая точка, обязательно лежащая на конце диаметра
 		
 		int N = rand.nextInt(amount - 2);
-		System.out.println(" "+amount+" = "+N+" + "+(amount-N-2));
+		//System.out.println(" "+amount+" = "+N+" + "+(amount-N-2));
 		
 		float curH = 0;
 		float prevH = 0;
@@ -216,7 +224,7 @@ public Shape (){
 		CircleRenderer= new ShapeRenderer();
 		CircleRenderer.setColor(0.3f, 0.3f, 0.3f, 1);
 	}
-	
+
 	private static float[] splitLine (int N,float L){
 		//разбиение отрезка на N случайных частей
 		Random rand = new Random();
@@ -235,4 +243,109 @@ public Shape (){
 		}
 		return K;
 	}
+	*/
+
+	private void generate2(){
+		System.out.println("Generating new shape...");
+		Random rand = new Random();
+		
+		float vx,vy;
+		vx = rand.nextFloat() * (MAE.MAX_VELOCITY+MAE.MAX_VELOCITY)-MAE.MAX_VELOCITY;
+		vy = rand.nextFloat() * (MAE.MAX_VELOCITY+MAE.MAX_VELOCITY)-MAE.MAX_VELOCITY;
+
+		float square = 0;
+		Vec pos = new Vec (rand.nextFloat()*MAE.GLOBAL_WIDTH,rand.nextFloat()*MAE.GLOBAL_HEIGHT);
+		R = rand.nextFloat() * (MAE.MAX_RADIUS-MAE.MIN_RADIUS)+MAE.MIN_RADIUS;
+		float angle = (float) (rand.nextFloat()*Math.PI*R*2);
+		//int amount = MAE.MAX_DOTS;
+		int amount = rand.nextInt((MAE.MAX_DOTS-3)) + 3;
+		
+		//System.out.println("Amount:"+ amount);
+		//System.out.println("Radius:"+R);
+		//dots - primal list of points in the circle ; points - treated list of points that will be in shape
+		ArrayList<Vec> dots = new ArrayList<Vec>();
+		ArrayList<Vec> points = new ArrayList<Vec>();
+		//These points necessarily must be in the shape; these points lies on the ends of diameter of bounding circle;
+		points.add(new Vec(pos.x - R, pos.y));
+		dots.add(new Vec(pos.x + R, pos.y));
+		for (int i = 0; i < amount-2; i++){
+			float X = rand.nextFloat()*(R+R)-R;
+			float maxY = (float) (Math.sqrt(R*R-X*X));
+			float Y = rand.nextFloat()*(maxY+maxY)-maxY;
+			Vec dot = new Vec(X+pos.x,  Y+pos.y);
+			//dot.write();
+			dots.add(dot);
+		}
+		
+		int i = 0,j = 0;
+		float prevMin = -1;
+		while (true) {
+			if (dots.size() == 0) break;
+			Vec p = points.get(i);
+			float min = 10000;
+			for (int d = 0; d < dots.size(); d++){
+				float a = getPolarAngle (dots.get(d).x-p.x,dots.get(d).y-p.y);
+				//System.out.println( ": "+a);
+				if (min > a) {
+					min = a;
+					j = d;
+				}
+			};
+			//System.out.println("final dot - "+j+" ,"+min);
+			if (prevMin> min) break;
+			
+			//площадь трапеции
+			float s = ( Math.abs((dots.get(j).y-pos.y)) + Math.abs((points.get(i).y-pos.y)) ) * Math.abs(  dots.get(j).x-points.get(i).x )/2;
+			square += s;
+			//System.out.println(square);
+			
+			points.add(dots.get(j));
+			dots.remove(j);
+			
+			i++;
+			prevMin = min;
+		}
+		
+		constructor(points,pos,new Vec(vx,vy),square,Utils.getRadiusVector(angle));
+		
+		rotate(angle);
+	}
+	/*
+	public static float getPolarAngle (float x, float y){
+		float PI = (float) Math.PI;
+		if (x == 0){
+			if (y == 0) return 0;
+			else if (y > 0) return (PI/2);
+			else return (PI*3/2);
+		}
+		float arc = (float)Math.atan(y/x);
+		if (x < 0) return (arc+PI);
+		else if (y<0) return (arc+PI+PI);
+		else return (arc);
+	}
+	*/
+	public static float getPolarAngle (float x, float y){
+		//return angle from -Pi/2
+		float PI = (float) Math.PI;
+		if (x == 0){
+			if (y == 0) return 0;// but this is an error;
+			else if (y > 0) return (PI);
+			else return 0;
+		}
+		float arc = (float)Math.atan(y/x);
+		if (x<0) return (arc+PI*3/2);
+		else if (y < 0) return (arc+PI/2);
+		else return (arc+PI/2);
+	}
+	private void drawPoints (ArrayList<Vec> points){
+		ShapeRenderer sr = new ShapeRenderer(); // memory leak
+		sr.begin(ShapeType.Point);
+		sr.setColor(1, 0, 0, 1);
+		for (Vec p : points){
+			sr.point(p.x+5, p.y+5, 0);
+		}
+		sr.end();
+	}
+
 }
+	

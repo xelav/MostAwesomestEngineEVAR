@@ -28,13 +28,17 @@ public class MAE implements ApplicationListener {
 	public static final int GLOBAL_WIDTH = 800;
 	public static final int GLOBAL_HEIGHT = 800;
 	public static final int LIMIT_FPS = 60;
-	public static final int OBJECTS = 1000;
-	public static final float MAX_RADIUS = 20;
-	public static final float MIN_RADIUS = 10;
-	public static final float MAX_VELOCITY = 10;
+	public static final int OBJECTS = 2500;
+	public static final float MAX_RADIUS = 10;
+	public static final float MIN_RADIUS = 5;
+	public static final float MAX_VELOCITY = 0;
+	public static final float MAX_ROTATION_SPEED = 0;
 	public static final float MAX_WIDTH = 50;
 	public static final float MAX_HEIGHT = 50;
-	public static final int MAX_DOTS = 8;
+	public static final int MAX_DOTS = 30;
+	public static final float PULLING_IMPULSE = 5;
+	public final static float RESILIENCE = 0.1f;
+	public final static float MASS_COEFFICIENT = 5;
 	
 	public static ArrayList<Body> Bodies = new ArrayList<Body>();
 	public static java.util.Iterator<Body> it;
@@ -55,7 +59,8 @@ public class MAE implements ApplicationListener {
 		Gdx.graphics.setDisplayMode(GLOBAL_WIDTH, GLOBAL_HEIGHT, false);
 		shapeRenderer = new ShapeRenderer();
 		AABB.sr = new ShapeRenderer();
-		Body.renderer = new ShapeRenderer();
+		Body.setRenderers();
+		Contact.contactRenderer = new ShapeRenderer();
 		
 		createScene();
 		
@@ -80,11 +85,13 @@ public class MAE implements ApplicationListener {
 		dots.add(new Vec(250,350));
 		dots.add(new Vec(350,350));
 		dots.add(new Vec(350,250));
-		Bodies.add(new Shape(dots, new Vec(305,305)));
+		Bodies.add(new Shape(dots, new Vec(305,305), 1f));
+		Body s2 = new Shape();
+		Bodies.add(s2);
 		*/
 	
 		for (int i = 1; i <= OBJECTS/2; i++) {
-			Bodies.add(new Shape());
+			//Bodies.add(new Shape());
 		}
 		for (int i = 1; i <= OBJECTS/2; i++){
 			float x,y,r,vx,vy;
@@ -92,10 +99,8 @@ public class MAE implements ApplicationListener {
 			x = rand.nextFloat() * MAE.GLOBAL_WIDTH;
 			y = rand.nextFloat() * MAE.GLOBAL_HEIGHT;
 			r = rand.nextFloat() * (MAX_RADIUS-MIN_RADIUS)+MIN_RADIUS;
-			if (rand.nextInt(2) == 1) vx = rand.nextFloat() * MAX_VELOCITY;
-			else vx = - rand.nextFloat() * MAX_VELOCITY;
-			if (rand.nextInt(2) == 1) vy = rand.nextFloat() * MAX_VELOCITY;
-			else vy = - rand.nextFloat() * MAX_VELOCITY;
+			vx = rand.nextFloat() * (MAX_VELOCITY+MAX_VELOCITY)-MAX_VELOCITY;
+			vy = rand.nextFloat() * (MAX_VELOCITY+MAX_VELOCITY)-MAX_VELOCITY;
 			Bodies.add(new Circle(x,y,r,new Vec (vx,vy)));
 		}
 	}
@@ -117,6 +122,8 @@ public class MAE implements ApplicationListener {
 		} catch (InterruptedException e) {}
 		
 		
+		Gdx.gl.glEnable(GL10.GL_BLEND);
+	    Gdx.gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
 		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
 		it = Bodies.iterator();
 		input();
@@ -134,10 +141,12 @@ public class MAE implements ApplicationListener {
 		if(Gdx.input.isButtonPressed(Input.Buttons.LEFT)){
 			if (Pressed){
 				if (Dragged != null){
+					//System.out.println("-------------------");
 					line.A = Dragged.getPosition(); // привязка к окружности
 					line.B = pointer;
 					line.draw();
-					Dragged.applyImpulse(Dragged.getPosition().x, Dragged.getPosition().y, new Vec(line.getdX(),line.getdY()) , (float) 5);
+					Dragged.applyImpulse(Dragged.getPosition().x, Dragged.getPosition().y, new Vec(line.getdX(),line.getdY()) , (float) PULLING_IMPULSE);
+					
 				}
 			} else { 
 				Pressed = true;
@@ -153,13 +162,17 @@ public class MAE implements ApplicationListener {
 				}
 		} 
 			// TEST
+			/*
 			for (Body b : quad.retrieve(pointer,new ArrayList<Body>())){
 				ShapeRenderer sr = new ShapeRenderer();
 				sr.begin(ShapeType.Circle);
 				sr.setColor(0.8f, 0.3f, 0.3f, 1);
-				sr.circle(b.getPosition().x, b.getPosition().y, b.R);
+				b.getPosition().write();
+				System.out.println(b.R);
+					sr.circle(b.getPosition().x, b.getPosition().y, 3);
 				sr.end();
 				}
+			*/
 			
 		} else {
 			Pressed = false;
@@ -195,8 +208,10 @@ public class MAE implements ApplicationListener {
 		}
 		
 		Collision.check();
-		System.out.println("Objects: "+Bodies.size());
-		System.out.println("count: "+Collision.count + " - "+Collision.cor);
+		
+		//System.out.println("Objects: "+Bodies.size());
+		//System.out.println("count: "+Collision.count + " - "+Collision.cor);
+		//System.out.println( quad.getIndex(c1.buildAABB()));
 		//quad.write();
 	}
 	
@@ -208,9 +223,9 @@ public class MAE implements ApplicationListener {
 			it.next().draw();
 		}
 		quad.draw();
-		//quad.getIndex(c1);
 		
 		Stats.write(new float[]{pointer.x,pointer.y}, 7);
+		Stats.write(new float[]{Shape.getPolarAngle(pointer.x-400, pointer.y-400)}, 8);
 	}
 	
 	public void resize(int arg0, int arg1) {

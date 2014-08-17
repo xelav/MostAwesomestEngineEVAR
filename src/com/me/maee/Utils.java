@@ -33,7 +33,9 @@ public class Utils {
 	
 	public static Vec getUnitVector(Vec V){
 		float l = V.getLength(); 
-		return new Vec(V.x/l,V.y/l);
+		V = new Vec(V.x/l,V.y/l);
+		return V;
+		
 	}
 	
 	public static float getAngleOfVector (Vec v){
@@ -147,5 +149,42 @@ public class Utils {
 	}
 	public static boolean between (float x1, float a, float x2){
 		return ((x1<=a)&&(a<=x2)) | ((x2<=a)&&(a<=x1));
+	}
+	public static boolean linesIntersects(Vec a1, Vec a2, Vec b1, Vec b2){
+		//Работает намного лучше
+		//!  Хотя случай когда отрезки на одной прямой всегда будет выдавать false
+		float disA = Utils.getDistance(a2, b2, a1);
+		float disB = Utils.getDistance(a2, b2, b1);
+		boolean a = (disA/Math.abs(disA) != disB/Math.abs(disB));
+		
+		disA = Utils.getDistance(a1, b1, a2);
+		disB = Utils.getDistance(a1, b1, b2);
+		boolean b = (disA/Math.abs(disA) != disB/Math.abs(disB));
+		
+		return (a && b);
+	}
+	public static Vec getIntersectionPoint (Vec a1 , Vec a2 , Vec b1 , Vec b2){
+			//Близко, но неправильно. Получается точка пересечения с линией с отклоением.
+			float dY1 = b1.y - a1.y;
+			float dX1 = b1.x - a1.x;
+			float k1 = dY1/dX1;
+			float m1 = a1.y - a1.x*k1;
+			
+			float dY2 = b2.y - a2.y;
+			float dX2 = b2.x - a2.x;
+			float k2 = dY2/dX2;
+			float m2 = a2.y - a2.x*k2;
+			
+			float x = (m1-m2)/(k2-k1);
+			float y = (k2*m1 - k1*m2)/(k2-k1);
+			
+			return new Vec (x,y);
+		
+	}
+	public static float getNormal(Vec v1, Vec v2) {
+		//Перпендикуляр
+		//TODO
+		float angle = getAngle(v1,v2);
+		return (float) (Math.sin(angle)*v1.getLength())  ;
 	}
 }
