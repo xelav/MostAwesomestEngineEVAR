@@ -14,10 +14,10 @@ import java.lang.Math;;
 public abstract class Body {
 	
 	protected AABB aabb; 
-	protected Vec pos;
-	protected Vec vel;
+	protected Vec pos , prevPos;
+	protected Vec vel , prevVel;
 	public float R;
-	protected float angle;
+	public float angle;
 	protected float rotationSpeed;
 	public boolean isStatic;
 	protected static ShapeRenderer  renderer;
@@ -45,6 +45,7 @@ public abstract class Body {
 			//}
 		//}
 		//System.out.println(NewPos.y);
+		
 		this.pos = NewPos;
 	}
 	public static void setRenderers(){
@@ -55,15 +56,36 @@ public abstract class Body {
 		angleRenderer.setColor(0.7f,0.7f,0.7f,1);
 	}
 	public Vec getPosition (){
-		return pos;
+		return new Vec(pos);
 	}
 	public Vec getVelocity(){
-		return vel;
+		return new Vec(vel);
+	}
+	public Vec getPrevPosition (){
+		return new Vec(prevPos);
+	}
+	public Vec getPrevVelocity(){
+		return new Vec(prevVel);
 	}
 	///////////
-	public void applyImpulse(float x, float y, Vec normal, float impulse){
+	public void applySpeed (float dV, Vec normal){
+		if (normal.getLength() != 1) Utils.getUnitVector(normal);
+		Vec Vel = getVelocity();
+		Vel.x += dV*normal.x;
+		Vel.y += dV*normal.y;
+		setVelocity(Vel);
+	}
+	public void applyImpulse (Vec A, Vec impulse){
+
+		Vec normal = new Vec (A,pos);
+		applyLinearImpulse (normal, Utils.getProjection(impulse, normal).getLength());
+		//applyAngularImpulse (Utils.getNormal(impulse, normal));
+		
+	}
+	
+	private void applyLinearImpulse(Vec normal, float impulse){
 		// normal - единичный вектор, отвечающий ТОЛЬКО за направление
-		Utils.getUnitVector(normal);
+		if (normal.getLength() != 1) normal = Utils.getUnitVector(normal);
 		Vec Vel = getVelocity();
 		Vel.x += impulse*normal.x/mass;
 		Vel.y += impulse*normal.y/mass;
@@ -75,10 +97,8 @@ public abstract class Body {
 			//normal.write();
 		//}
 	}
-	public void applyAngularImpulse (float dV){
-		
-		rotationSpeed += mass*dV/R/1000;
-		
+	private void applyAngularImpulse (float dV){
+		rotationSpeed += mass*dV/R/100;
 	}
 	
 	public void setCollision(boolean collide){
@@ -92,14 +112,24 @@ public abstract class Body {
 		else renderer.setColor(1, 1, 1, density);
 	}
 	public AABB getRect(){
-		return aabb;
-		//return buildAABB();
+		return aabb; //!!!
 	}
 	public float getMass(){
-		return mass;
+		return mass; //!!!
 	}
-	protected void gravity(){
-		vel.add(new Vec(0, -5));
+	public void gravity(){
+		vel = vel.add(new Vec(0, -5));
 	}
+	public void positionCorrection (Vec depth, float portion){
+		pos = pos.add(depth.scl(portion));
+	}
+	// bad bouncing method
+	public void revertVelX(){
+		vel.x = - vel.x;
+	}
+	public void revertVelY(){
+		vel.y = - vel.y;
+	}
+	
 	
 }

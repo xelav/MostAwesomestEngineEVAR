@@ -15,7 +15,10 @@ public class Circle extends Body {
 	//Конструктор
 	//////////
 	private void Constructor (float x ,float y, Vec vel, Vec F, float R){
-		density = new Random().nextFloat();
+		if (MAE.DENSITY)
+			density = new Random().nextFloat();
+			else density = 1;
+		
 		setPosition(new Vec(x,y));
 		setVelocity(vel);
 		this.R = R;
@@ -62,7 +65,8 @@ public class Circle extends Body {
 	}
 	
 	private void updatePosition(float dT){
-		setPosition(pos.add(vel.scl(dT)));
+		pos = pos.add(vel.scl(dT));
+		setPosition(pos);
 	}
 	private void updateRotation(float dT){
 		//rotate (dT*rotationSpeed);
@@ -70,7 +74,8 @@ public class Circle extends Body {
 	}
 	
 	public void update(float dT) {
-		//gravity();
+		if (MAE.GRAVITY)
+			gravity();
 		updatePosition(dT);
 		aabb = buildAABB();
 		updateRotation(dT);

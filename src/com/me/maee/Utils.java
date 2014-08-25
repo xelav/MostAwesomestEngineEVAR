@@ -99,50 +99,30 @@ public class Utils {
 		return Math.abs(getAngleOfVector(v)-getAngleOfVector(A));
 	}
 	/////////
-	public static float getProjection(Vec v, Vec A){
-		if (v.getLength() == 0) return 0;
+	public static Vec getProjection(Vec v, Vec A){
+		//return length of projection v on A
+		if (v.getLength() == 0 || A.getLength() == 0) return new Vec();
+		//if (A.x < 0) A.x = -A.x;
 		float angle = getAngle(v, A);
-		return (float) (v.getLength()*Math.cos((double) angle));
+		float l = (float) Math.cos(angle)*v.getLength();
+		//return  new Vec(A).sub((float) (v.getLength()*Math.cos((double) angle)));
+		//Vec.polarToCartesian(A.getAngle(), l).write();
+		return Vec.polarToCartesian(A.getAngle(), l);
+		
+	}
+	public static Vec getNormal(Vec vector, Vec point) {
+		//Перпендикуляр
+		//System.out.println("---");
+		//if (vector.getLength() == 0) return new Vec();
+		//float angle = getAngle(vector, point);
+		//float l = (float) Math.sin(angle)*vector.getLength();
+		//return Vec.polarToCartesian((float)Math.PI/2 - point.getAngle(), l );
+		Vec proj = getProjection (vector,point);
+		//return new Vec (line.A.add(linearImpulse), pointer);
+		return proj;
+		
 	}
 	//////////
-	/*
-	public static boolean pointBelongsToSection (Vec p1, Vec p2, Vec A){
-		//Шизофазия
-		//BigDecimal x1 = new BigDecimal (A.x).add(new BigDecimal (-p1.x)).divide(new BigDecimal (p2.x).add(new BigDecimal (-p1.x)));
-				
-			if (Float.isNaN(A.x)) return false;
-			if (p1 == null) return false;
-			if (p2 == null) return false;
-		
-		//float x = (A.x - p1.x) / (p2.x-p1.x);
-		//float y = (A.y - p1.y) / (p2.y-p1.y);
-		
-		//System.out.println("!"+A.x);
-		
-		BigDecimal Ax = BG(A.x);
-		BigDecimal p1x = BG(p1.x);
-		BigDecimal Ay = BG(A.y);
-		BigDecimal p1y = BG(p1.y);
-		BigDecimal p2x = BG(p2.x);
-		BigDecimal p2y = BG(p2.y);
-		
-		BigDecimal x1 = Ax.subtract(p1x);
-		x1 = x1.divide(p2x.subtract(p1x), 20, BigDecimal.ROUND_CEILING);
-		BigDecimal y1 = Ay.subtract(p1y);
-		y1 = y1.divide(p2y.subtract(p1y), 20, BigDecimal.ROUND_CEILING);
-		
-		
-		System.out.println("-----------");
-		System.out.println(x1.toString()+" == " +y1.toString());
-		
-		//System.out.println(" "+x1 +" == "+ y);
-		//System.out.println(""+(x == y));
-		//return (x == y);
-		
-		// не уверен насчет этого условия
-		return (x1.equals(y1));
-		
-	}*/
 	
 	public static boolean pointBelongsToSection (Vec p1, Vec p2, Vec A){
 		return (between(p1.x,A.x,p2.x)) && (between(p1.y,A.y,p2.y));
@@ -164,7 +144,6 @@ public class Utils {
 		return (a && b);
 	}
 	public static Vec getIntersectionPoint (Vec a1 , Vec a2 , Vec b1 , Vec b2){
-			//Близко, но неправильно. Получается точка пересечения с линией с отклоением.
 			float dY1 = b1.y - a1.y;
 			float dX1 = b1.x - a1.x;
 			float k1 = dY1/dX1;
@@ -179,12 +158,18 @@ public class Utils {
 			float y = (k2*m1 - k1*m2)/(k2-k1);
 			
 			return new Vec (x,y);
-		
 	}
-	public static float getNormal(Vec v1, Vec v2) {
-		//Перпендикуляр
-		//TODO
-		float angle = getAngle(v1,v2);
-		return (float) (Math.sin(angle)*v1.getLength())  ;
+	public static float getPolarAngle (float x, float y){
+		//return angle from -Pi/2
+		float PI = (float) Math.PI;
+		if (x == 0){
+			if (y == 0) return 0;// but this is an error;
+			else if (y > 0) return (PI);
+			else return 0;
+		}
+		float arc = (float)Math.atan(y/x);
+		if (x<0) return (arc+PI*3/2);
+		else if (y < 0) return (arc+PI/2);
+		else return (arc+PI/2);
 	}
 }

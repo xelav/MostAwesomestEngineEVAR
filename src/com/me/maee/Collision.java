@@ -28,57 +28,32 @@ public class Collision {
 	//”пругость всех тел
 	static final float Resilience = 0f;
 	//Ћист контактов
-	static HashSet<Contact> contacts;
+	static ArrayList<Contact> contacts;
 	
 	//создаем список контактов
 	public static void create (){
-		contacts = new HashSet<Contact>();
+		contacts = new ArrayList<Contact>();
 	}
-	
-	
-	// ћетод, взаимодействующий с другими классами
-	// ѕросто вызываем проверочный detectColl и смотрим список контактов
-	/*
-	public static void check(){
-		contacts = new HashSet<Contact>();
-		
-		//состовл€ем список контактов
-		//ѕо идее, нужно провер€ть только еще нестолкнувшиес€ тела
-		//System.out.println("------ ");
-		for (int i = 0; i < MAE.Bodies.size()-1; i++)
-			for (int j = i+1; j < MAE.Bodies.size(); j++){
-				if (detectColl(i,j)){
-					
-				}
-			}
-		//ќбновл€ем статусы объектов
-		for (Body b : MAE.Bodies) b.collide = false;
-		for (Contact c : contacts){
-			
-			
-			
-			//System.out.println(""+c.ind1()+" "+c.ind2()+" , "+c.depth);
-			MAE.Bodies.get(c.ind1()).collide = true;
-			MAE.Bodies.get(c.ind2()).collide = true;
-			
-			//–ешаем контакты
-			c.resolve();
-		}
-	}
-	*/
 	/*
 	 * ¬торой алгоритм проверки коллизий, по идее, должен быть быстрее
 	 * ќснован на квадратичном дереве
 	 */
 	public static void check(){
 		//новый список контактов
-		contacts = new <Contact>HashSet();
+		contacts = new <Contact>ArrayList();
 		//окрашиваем все тела в белый цвет
 		for (Body b : MAE.Bodies) b.collide = false;
 		
 		MAE.quad.check(new ArrayList<Body>());
 		
-		for (Contact c :contacts) c.resolve();
+		if (contacts.size() == 0) return;
+		//System.out.println("---Contact---  :" + contacts.size());
+		
+		for (Contact c :contacts) {
+			//System.out.println(c);
+			//System.out.println("   "+c.b1+" , "+c.b2);
+			c.resolve();
+		}
 	}
 	
 	public static boolean preDetect (Body b1, Body b2){
@@ -156,13 +131,13 @@ public class Collision {
 		for (int i = 0; i<s.points.size()-1; i++){
 			if (circleVsLine(c,s.points.get(i),s.points.get(i+1))){
 				Vec normal = new Vec (c.getPosition(),s.getPosition());
-				contacts.add(new Contact (normal,normal.getLength(), c, s, Contact.CIRCLE_VS_SHAPE));
+				//contacts.add(new Contact (normal,normal.getLength(), c, s, Contact.CIRCLE_VS_SHAPE));
 				return true;
 			}
 		}
 		if (circleVsLine(c,s.points.get(0),s.points.get(s.points.size()-1))){
 			Vec normal = new Vec (c.getPosition(),s.getPosition());
-			contacts.add(new Contact (normal,normal.getLength(), c, s, Contact.CIRCLE_VS_SHAPE));
+			//contacts.add(new Contact (normal,normal.getLength(), c, s, Contact.CIRCLE_VS_SHAPE));
 			return true;
 		}
 		return false;
@@ -177,9 +152,6 @@ public class Collision {
 		//¬се работает
 		
 		//проверка пересечени€ с пр€мой
-		//System.out.println(x+" "+y+" "+R);
-		//A.write();
-		//B.write();
 		float dis = Utils.getDistance (A,B,new Vec (x,y));
 		dis = Math.abs(dis);
 		if (dis > R){
@@ -195,23 +167,6 @@ public class Collision {
 		if  (Utils.between(A.x, x, B.x)) return true;
 		if  (Utils.between(A.y, y, B.y)) return true;
 		return false;
-		/*//слишком сложно
-		 * //находим точки пересечени€ и определ€ем принадлежность их к отрезку
-		float L = Utils.getLength(A,B);
-		float Xv = (B.x-A.x)/L;
-		float Yv = (B.y-A.y)/L;
-		float Xd = A.x-x;
-		float Yd = A.y-y;
-		float a = (Xd*Xd+Yd*Yd);
-		float b = (2*Xd*Yd*A.y)-(2*A.x*Yd*Yd);
-		float c = (2*Xd*Yd*A.y*A.x)+(2*A.y*A.y*Xd*Xd)-(Xd*Xd*R*R);
-		float D = b*b - (4*a*c);
-		if (D > 0) {
-			return true;
-		} else{
-			return false;
-		}
-		*/
 	}
 
 	////////////
@@ -226,6 +181,8 @@ public class Collision {
 	///////////
 	//Circle-Circle
 	public static boolean circlesIntersects(Body b1, Body b2){
+		
+		
 		float dX = b1.getPosition().x - b2.getPosition().x;
 		float dY = b1.getPosition().y - b2.getPosition().y;
 		float dis = b1.R + b2.R;
@@ -235,10 +192,12 @@ public class Collision {
 			if (b1.type == BodyType.CIRCLE && b2.type == BodyType.CIRCLE){
 				Vec normal = new Vec(b1.getPosition(),b2.getPosition());
 				//normal.write();
+				//b1.applyAngularImpulse( Utils.getNormal(new Vec(normal),new Vec(b1.getVelocity()).add(b2.getVelocity())));
+				//b2.applyAngularImpulse( Utils.getNormal(new Vec(normal),new Vec(b1.getVelocity()).add(b2.getVelocity())));
 				
-				b1.applyAngularImpulse( Utils.getNormal(new Vec(normal),new Vec(b1.getVelocity()).add(b2.getVelocity())));
-				b2.applyAngularImpulse( -Utils.getNormal(new Vec(normal),new Vec(b1.getVelocity()).add(b2.getVelocity())));
-				contacts.add(new Contact(Utils.getUnitVector(normal), normal.getLength(), b1 , b2, Contact.CIRCLE_VS_CIRCLE));
+				Contact C =new Contact (Contact.CIRCLE_VS_CIRCLE, b1, b2);
+				contacts.add(C);
+				//contacts.add(new Contact(Utils.getUnitVector(normal), normal.getLength(), b1 , b2, Contact.CIRCLE_VS_CIRCLE));
 				return true;
 			}
 			if (b1.type == BodyType.CIRCLE && b2.type == BodyType.SHAPE)
@@ -251,4 +210,16 @@ public class Collision {
 			
 		}
 	}
+	///////////
+	public static void boundCollision (Body b){
+		AABB rect = b.getRect();
+		if  (rect.x < 0 || rect.x+rect.width > MAE.GLOBAL_WIDTH) {
+			b.revertVelX();
+		}
+		if ( rect.y < 0 || rect.y + rect.height > MAE.GLOBAL_HEIGHT){
+			b.revertVelY();
+		}
+	}
+	
+	
 }

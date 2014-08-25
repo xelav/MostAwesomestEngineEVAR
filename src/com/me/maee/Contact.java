@@ -24,26 +24,32 @@ public class Contact {
 	public Body b1;
 	public Body b2;
 	
-	public float rotationImpulse;
-	public Vec normal;
-	public float depth;
+	//required data
 	
-	Contact (Vec normal, float depth, int index1,int index2, int type){
-		this.normal = normal;
-		this.depth = depth;
-		b1 = MAE.Bodies.get(index1);
-		b2 = MAE.Bodies.get(index1);
-		this.type= type;
-	}
-	Contact (Vec normal, float depth, Body b1, Body b2, int type){
-		this.normal = normal;
-		this.depth = depth;
+	//auxiliary data
+	private Vec P1 , P2; // точка контакта
+	private Vec normal; //also depth of contact
+	private float depth;
+	private Vec Vab; //relative speed
+	float v1, v2;
+	
+	
+	
+	Contact (int type, Body b1, Body b2){
 		this.b1 = b1;
 		this.b2 = b2;
 		this.type = type;
-	} 
-	
+	}
 	public void resolve (){
+		
+		getPoints();
+		
+		normal = new Vec (P1,P2);
+		depth = normal.getLength();
+		Vab = new Vec (b1.getVelocity().add(b2.getVelocity()));
+		v1 = Utils.getProjection(b1.getVelocity(), normal).getLength();
+		v2 = Utils.getProjection(b2.getVelocity(), normal).getLength();
+		
 		draw();
 		
 		int type1 = b1.type;
@@ -58,10 +64,31 @@ public class Contact {
 		
 	}
 	
+	private void getPoints(){
+		float dx = Math.abs(b1.getPosition().x - b2.getPosition().x);
+		float dy = Math.abs(b1.getPosition().y - b2.getPosition().y);
+		float L = (float) Math.sqrt(dx*dx+dy*dy);
+		//float l = b1.R + b2.R - L;
+		float sin = dy / L;
+		float cos = dx / L;
+		float minX = Math.min(b1.getPosition().x, b2.getPosition().x);
+		float minY = Math.min(b1.getPosition().y, b2.getPosition().y);
+		
+		if (b1.getPosition().x < b2.getPosition().x){
+			this.P2 = new Vec ( minX + (cos * (L - b2.R)) , minY + (sin * (L - b2.R)) );
+			this.P1 = new Vec ( minX + (cos * b1.R) , minY + (sin * b1.R));
+		} else {
+			this.P1 = new Vec ( minX + (cos * (L - b1.R)) , minY + (sin * (L - b1.R)) );
+			this.P2 = new Vec ( minX + (cos * b2.R) , minY + (sin * b2.R));
+		}
+		
+	}
+	
 	private void draw(){
+		//normal.write();
 		contactRenderer.setColor(Color.GREEN);
-		contactRenderer.begin(ShapeType.Line);
-		contactRenderer.line(normal.x, normal.y, normal.x, normal.y);
+		contactRenderer.begin(ShapeType.Circle);
+		contactRenderer.circle(normal.x, normal.y, 5);
 		contactRenderer.end();
 	}
 	
@@ -69,41 +96,82 @@ public class Contact {
 		Circle c1 = (Circle)b1;
 		Circle c2 = (Circle)b2;
 		
-		float impulse = getImpulse(normal, depth, c1.getVelocity(), c2.getVelocity(), c1.getMass(), c2.getMass());
-		c1.applyImpulse(c1.getPosition().x, c1.getPosition().y, normal, -impulse);
-		c2.applyImpulse(c2.getPosition().x, c2.getPosition().y, normal, impulse);
+		//System.out.println("---impulse---");
+		
+		float V = Utils.getProjection(Vab, normal).getLength();
+		//System.out.println("v1: "+v1+" v2: "+v2+"  DV: "+V);
+		//System.out.println("m1: "+b1.getMass()+"  m2: "+b2.getMass());
+		
+		//c1.applyAngularImpulse(depth);
+		//c2.applyAngularImpulse(depth);
+		
+		//positionCorrection(Utils.getProjection(c1.getVelocity(),normal),Utils.getProjection(c2.getVelocity(),normal),normal);
+		
+		float p1 = b1.getMass()*v1+b2.getMass()*v2;
+		//System.out.println(("p1:   "+ b1.getMass()*v1)+" + "+(b2.getMass()*v2)+" = "+p1);
+		float impulse = getLinearImpulse(V, c1.getMass(), c2.getMass());
+		float E1 = b1.getMass()*b1.getVelocity().x*b1.getVelocity().x + b2.getMass()*b2.getVelocity().x*b2.getVelocity().x;
+		
+		//c1.applySpeed(getSpeed(Utils.getProjection(Vab,normal),c1.getMass(),c2.getMass()), normal);
+		
+		//c1.applyImpulse(A, impulse);
+		//c2.applyImpulse(A, impulse);
+		
+		v1 = Utils.getProjection(b1.getVelocity(), normal).getLength();
+		v2 = Utils.getProjection(b2.getVelocity(), normal).getLength();
+		//System.out.println("v1: "+v1+" v2: "+v2+"  DV: "+V);
+		float p2 = b1.getMass()*v1+b2.getMass()*v2;
+		//System.out.println(("p2:   "+ b1.getMass()*v1)+" + "+(b2.getMass()*v2)+" = "+p2);
+		float E2 = b1.getMass()*b1.getVelocity().x*b1.getVelocity().x + b2.getMass()*b2.getVelocity().x*b2.getVelocity().x;
+		
+		//if (E1 != E2) {
+			//System.out.println(E2 - E1);
+		//}
+		
+		//System.out.println(p1+" V "+ p2);
 	}
 	private void circleVsShape(Circle c, Shape s){
 		
-		float impulse = getImpulse(normal, depth, c.getVelocity(), s.getVelocity(), c.getMass(), s.getMass());
-		c.applyImpulse(c.getPosition().x, c.getPosition().y, normal, -impulse);
+		//float impulse = getLinearImpulse(normal, depth, c.getVelocity(), s.getVelocity(), c.getMass(), s.getMass());
+		//c.applyImpulse(c.getPosition().x, c.getPosition().y, normal, -impulse);
 		//s.applyImpulse(s.getPosition().x, s.getPosition().y, normal, impulse);
 	}
 	private void shapeVsShape(){
 		Shape s1 = (Shape)b1;
 		Shape s2 = (Shape)b2;
 		
-		float impulse = getImpulse(normal, depth, s1.getVelocity(), s1.getVelocity(), s1.getMass(), s2.getMass());
-		s1.applyImpulse(s1.getPosition().x, s1.getPosition().y, normal, -impulse);
-		s2.applyImpulse(s2.getPosition().x, s2.getPosition().y, normal, impulse);
+		//float impulse = getLinearImpulse(normal, depth, s1.getVelocity(), s1.getVelocity(), s1.getMass(), s2.getMass());
+		//s1.applyImpulse(s1.getPosition().x, s1.getPosition().y, normal, -impulse);
+		//s2.applyImpulse(s2.getPosition().x, s2.getPosition().y, normal, impulse);
 	}
 	
-	private static float getImpulse(Vec normal, float depth,Vec v1,Vec v2, float m1, float m2){
-		float v1Pr = Utils.getProjection(v1,normal);
-		float v2Pr = Utils.getProjection(v2,normal);
-		float Vab = v2Pr - v1Pr;
-		//Vec imp1 = v1.scl(m1).add(v2.scl(m2));
+	private float getLinearImpulse(float V, float m1, float m2){
+		//System.out.println("getImpulse");
+		//System.out.println(V);
 		
-		//TODO: ”пругий удар
-		if (Vab < 0 ) return 0;
-		if (Vab == 0) return - m1*m2/(m1+m2) *depth;
-		float p = m1*m2/(m1+m2) * (1+MAE.RESILIENCE) * Vab;
-		p = p + m1*m2/(m1+m2) * depth * 0.6f ;
-		Vec imp2 = v1.scl(m1).add(v2.scl(m2));
-		//imp1.write();
-		//imp2.write();
+		if (V < 0 ) return 0;
+		if (V == 0) return m1*m2/(m1+m2);
+		float p = m1*m2/(m1+m2) * V  * 2f;
+		//p = p + m1*m2/(m1+m2) * depth * 0.6f ;
+		//float p = (m1*m2)/(m1+m2)*V;
+
+		//System.out.println(((m1*m2)/(m1+m2))+" * "+V);
+		//System.out.println("imp:"+ p);
 		
-		return - p;
+		return p;
+	}
+	private float getSpeed (float V, float m1, float m2) {
+		float u1 =- V*(m1-m2)/(m1+m2);
+		return u1;
+	}
+	
+	private void positionCorrection(float v1,float v2, Vec depth){
+		//System.out.println("cor");
+		//System.out.println(v1+" "+v2);
+		if (v1 == -v2) return;
+		//depth.write();
+		b1.positionCorrection(depth.reverse(),v1/(v1+v2));
+		b2.positionCorrection(depth,v2/(v1+v2));
 	}
 	
 }

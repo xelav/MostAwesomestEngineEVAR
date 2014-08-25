@@ -96,7 +96,7 @@ public class Shape extends Body {
 	
 	@Override
 	public void update(float deltaTime) {
-		updateRotation(deltaTime);
+		//updateRotation(deltaTime);
 		updatePosition(deltaTime);
 		aabb = buildAABB();
 	}
@@ -284,7 +284,7 @@ public class Shape extends Body {
 			Vec p = points.get(i);
 			float min = 10000;
 			for (int d = 0; d < dots.size(); d++){
-				float a = getPolarAngle (dots.get(d).x-p.x,dots.get(d).y-p.y);
+				float a = Utils.getPolarAngle (dots.get(d).x-p.x,dots.get(d).y-p.y);
 				//System.out.println( ": "+a);
 				if (min > a) {
 					min = a;
@@ -310,33 +310,7 @@ public class Shape extends Body {
 		
 		rotate(angle);
 	}
-	/*
-	public static float getPolarAngle (float x, float y){
-		float PI = (float) Math.PI;
-		if (x == 0){
-			if (y == 0) return 0;
-			else if (y > 0) return (PI/2);
-			else return (PI*3/2);
-		}
-		float arc = (float)Math.atan(y/x);
-		if (x < 0) return (arc+PI);
-		else if (y<0) return (arc+PI+PI);
-		else return (arc);
-	}
-	*/
-	public static float getPolarAngle (float x, float y){
-		//return angle from -Pi/2
-		float PI = (float) Math.PI;
-		if (x == 0){
-			if (y == 0) return 0;// but this is an error;
-			else if (y > 0) return (PI);
-			else return 0;
-		}
-		float arc = (float)Math.atan(y/x);
-		if (x<0) return (arc+PI*3/2);
-		else if (y < 0) return (arc+PI/2);
-		else return (arc+PI/2);
-	}
+	
 	private void drawPoints (ArrayList<Vec> points){
 		ShapeRenderer sr = new ShapeRenderer(); // memory leak
 		sr.begin(ShapeType.Point);

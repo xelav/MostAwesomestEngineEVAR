@@ -42,5 +42,9 @@ public class Line {
 	public float getdY(){
 		return (B.y-A.y);
 	}
+	public Vec getVec(){
+		return new Vec(A,B);
+	}
+	
 	
 }

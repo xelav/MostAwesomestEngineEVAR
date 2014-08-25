@@ -25,10 +25,11 @@ import com.me.quadtree.QuadTree;
 
 public class MAE implements ApplicationListener {
 
-	public static final int GLOBAL_WIDTH = 800;
-	public static final int GLOBAL_HEIGHT = 800;
+	public static final int GLOBAL_WIDTH = 500;
+	public static final int GLOBAL_HEIGHT = 400;
 	public static final int LIMIT_FPS = 60;
-	public static final int OBJECTS = 2500;
+	public static final int OBJECTS = 400;
+	
 	public static final float MAX_RADIUS = 10;
 	public static final float MIN_RADIUS = 5;
 	public static final float MAX_VELOCITY = 0;
@@ -36,9 +37,17 @@ public class MAE implements ApplicationListener {
 	public static final float MAX_WIDTH = 50;
 	public static final float MAX_HEIGHT = 50;
 	public static final int MAX_DOTS = 30;
-	public static final float PULLING_IMPULSE = 5;
-	public final static float RESILIENCE = 0.1f;
+	
+	public static final float PULLING_IMPULSE = 100;
+	public final static float RESILIENCE = 1f;
+	public final static boolean ELLASTIC_COLLSION = true;
+	public final static float RESTITUTION = 1f;
+	public final static float FRICTION = 1f;
 	public final static float MASS_COEFFICIENT = 5;
+	
+	public final static boolean CLOSED_BOUNDS = true;
+	public final static boolean GRAVITY = false;
+	public final static boolean DENSITY = false;
 	
 	public static ArrayList<Body> Bodies = new ArrayList<Body>();
 	public static java.util.Iterator<Body> it;
@@ -71,12 +80,10 @@ public class MAE implements ApplicationListener {
 		
 		quad = new QuadTree(1, new AABB (0,0,GLOBAL_WIDTH,GLOBAL_HEIGHT));
 	}
-
-	private void createScene(){
-		//TODO: ƒобавл€ем необходимые тела
-		/*
-		c1 = new Circle(200, 200, 20);
-		c2 = new Circle(300, 200, 50);
+	
+	private void test1(){
+		c1 = new Circle(200, 200, 30, new Vec(24,0));
+		c2 = new Circle(300, 200, 30);
 		
 		Bodies.add(c1);
 		Bodies.add(c2);
@@ -85,11 +92,11 @@ public class MAE implements ApplicationListener {
 		dots.add(new Vec(250,350));
 		dots.add(new Vec(350,350));
 		dots.add(new Vec(350,250));
-		Bodies.add(new Shape(dots, new Vec(305,305), 1f));
+		//Bodies.add(new Shape(dots, new Vec(305,305), 1f));
 		Body s2 = new Shape();
-		Bodies.add(s2);
-		*/
-	
+		//Bodies.add(s2);
+	}
+	private void test2(){
 		for (int i = 1; i <= OBJECTS/2; i++) {
 			//Bodies.add(new Shape());
 		}
@@ -103,6 +110,11 @@ public class MAE implements ApplicationListener {
 			vy = rand.nextFloat() * (MAX_VELOCITY+MAX_VELOCITY)-MAX_VELOCITY;
 			Bodies.add(new Circle(x,y,r,new Vec (vx,vy)));
 		}
+	}
+	
+	private void createScene(){
+		test1();
+		//test2();
 	}
 	
 	@Override
@@ -127,14 +139,15 @@ public class MAE implements ApplicationListener {
 		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
 		it = Bodies.iterator();
 		input();
+		draw();
 		update();
-		draw();	
 		
 	}
 	
 	Vec A;
 	boolean Pressed = false ;
 	Body Dragged;
+	Vec normal;
 	
 	private void input() {
 		
@@ -142,11 +155,21 @@ public class MAE implements ApplicationListener {
 			if (Pressed){
 				if (Dragged != null){
 					//System.out.println("-------------------");
-					line.A = Dragged.getPosition(); // прив€зка к окружности
+					line.A = Dragged.getPosition().add(A); // прив€зка к окружности
 					line.B = pointer;
 					line.draw();
-					Dragged.applyImpulse(Dragged.getPosition().x, Dragged.getPosition().y, new Vec(line.getdX(),line.getdY()) , (float) PULLING_IMPULSE);
 					
+					Vec linearImpulse = Utils.getProjection(line.getVec().reverse(), A);
+					Vec radialImpulse = Utils.getNormal(line.getVec().reverse(), A);
+					
+					Vec.draw(line.A,line.A.add(radialImpulse));
+					Vec.draw(line.A.add(linearImpulse), pointer );
+					
+					//.draw(Dragged.getPosition());
+					radialImpulse.draw(line.A);
+					Vec.draw(line.A,line.A.add(linearImpulse));
+					//Dragged.applyImpulse(pointer, new Vec(line.getdX(),line.getdY()).scl(PULLING_IMPULSE));
+					//System.out.println(Dragged.angle);
 				}
 			} else { 
 				Pressed = true;
@@ -157,6 +180,7 @@ public class MAE implements ApplicationListener {
 					//Circle c = (Circle)b; // пускай так
 					if  (Utils.inRange(b.getPosition(), A, b.R)){
 						Dragged = b;
+						A = new Vec (A,Dragged.getPosition());
 						break;
 					}
 				}
@@ -179,21 +203,23 @@ public class MAE implements ApplicationListener {
 			Dragged = null;
 		}
 		if(Gdx.input.isKeyPressed(Input.Keys.S)){
-			c1.applyImpulse(c1.getPosition().x, c1.getPosition().y, new Vec(1,0), 10000);
+			//c1.applyImpulse(c1.getPosition().x, c1.getPosition().y, new Vec(1,0), 10000);
 		} 
 		if(Gdx.input.isKeyPressed(Input.Keys.A)){
-			c1.applyImpulse(c1.getPosition().x, c1.getPosition().y, new Vec(-1,0), 10000);
+			//c1.applyImpulse(c1.getPosition().x, c1.getPosition().y, new Vec(-1,0), 10000);
 		}
 	}
 	
 	private void update() {
-		System.out.println("===========");
+		//System.out.println("===========");
 		Collision.count = 0;
 		Collision.cor = 0;
 		
 		float dTime = Gdx.graphics.getDeltaTime();
 		for(Body b: Bodies){
 			b.update(dTime);
+			if (GRAVITY)
+				b.gravity();
 		}
 		
 		pointer = new Vec(Gdx.input.getX(),GLOBAL_HEIGHT - Gdx.input.getY());
@@ -203,11 +229,14 @@ public class MAE implements ApplicationListener {
 		Iterator<Body> it = Bodies.iterator();
 		while (it.hasNext()){
 			Body b = it.next();
-			if (quad.insert(b) && b != Dragged)
+			if (quad.insert(b) && b != Dragged && !CLOSED_BOUNDS)
 				it.remove();
+			if (CLOSED_BOUNDS)
+				Collision.boundCollision(b);
 		}
 		
 		Collision.check();
+		//System.out.println("Count: "+Collision.count);
 		
 		//System.out.println("Objects: "+Bodies.size());
 		//System.out.println("count: "+Collision.count + " - "+Collision.cor);
@@ -217,15 +246,17 @@ public class MAE implements ApplicationListener {
 	
 	private void draw() {
 		
-		fps.log();
+		//fps.log();
 		Iterator<Body> it = Bodies.iterator();
 		while (it.hasNext()){
 			it.next().draw();
 		}
 		quad.draw();
 		
-		Stats.write(new float[]{pointer.x,pointer.y}, 7);
-		Stats.write(new float[]{Shape.getPolarAngle(pointer.x-400, pointer.y-400)}, 8);
+		if (pointer != null)
+			Stats.write(new float[]{pointer.x,pointer.y}, 7);
+		//Stats.write(new float[]{Shape.getPolarAngle(pointer.x-400, pointer.y-400)}, 8);
+		Stats.write(new float[]{Utils.getAngle(new Vec(1,1), new Vec(-1,0))}, 9);
 	}
 	
 	public void resize(int arg0, int arg1) {
