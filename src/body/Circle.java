@@ -37,7 +37,7 @@ public class Circle extends Body {
 	public void draw() {
 		//aabb.draw();
 		setColor();
-		renderer.begin(ShapeType.Circle);
+		renderer.begin(ShapeType.Line);
 		renderer.circle(getPosition().x, getPosition().y, R);
 		renderer.end();
 		//posRenderer.begin(ShapeType.Point);

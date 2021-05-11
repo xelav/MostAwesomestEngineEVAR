@@ -39,7 +39,7 @@ public class AABB{
 	}
 	
 	public void draw() {
-		sr.begin(ShapeType.Rectangle);
+		sr.begin(ShapeType.Line);
 		sr.rect(one.x, one.y, width, height);
 		sr.end();
 	}

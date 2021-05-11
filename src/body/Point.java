@@ -36,8 +36,8 @@ public class Point extends Body {
 	}
 	
 	private void updateSpeed(float dT){
-		Vec imp = F.div(mass);
-		this.vel = vel.add(imp);
+//		Vec imp = F.div(mass);
+//		this.vel = vel.add(imp);
 	}
 	private void updateRotation(float dT){
 		
@@ -46,7 +46,7 @@ public class Point extends Body {
 		updatePosition(dT);
 		updateSpeed(dT);
 		updateRotation(dT);
-		F = new Vec(0,0);
+//		F = new Vec(0,0);
 	}
 
 	@Override
@@ -54,5 +54,15 @@ public class Point extends Body {
 		// TODO Auto-generated method stub
 		return 0;
 	}
-	
+
+	@Override
+	protected void rotate(float angle) {
+
+	}
+
+	@Override
+	protected AABB buildAABB() {
+		return null;
+	}
+
 }

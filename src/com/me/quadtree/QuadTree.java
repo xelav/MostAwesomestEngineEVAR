@@ -223,7 +223,7 @@ public class QuadTree {
 		} else {
 			ShapeRenderer renderer = new ShapeRenderer();
 			renderer.setColor(0.8f,0.3f,0.3f,1);
-			renderer.begin(ShapeType.Rectangle);
+			renderer.begin(ShapeType.Line);
 			renderer.rect(bounds.one.x-1, bounds.one.y-1, bounds.width+2, bounds.height+2);
 			renderer.end();
 			

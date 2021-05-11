@@ -28,7 +28,7 @@ public class MAE implements ApplicationListener {
 	public static final int GLOBAL_WIDTH = 800;
 	public static final int GLOBAL_HEIGHT = 800;
 	public static final int LIMIT_FPS = 60;
-	public static final int OBJECTS = 4000;
+	public static final int OBJECTS = 1000;
 	public static final float MAX_RADIUS = 20;
 	public static final float MIN_RADIUS = 1;
 	public static final float MAX_VELOCITY = 30;
@@ -69,27 +69,26 @@ public class MAE implements ApplicationListener {
 
 	private void createScene(){
 		//TODO: Добавляем необходимые тела
-		/*
-		c1 = new Circle(200, 200, 20);
-		c2 = new Circle(300, 200, 50);
-		
-		Bodies.add(c1);
-		Bodies.add(c2);
-		ArrayList<Vec> dots = new ArrayList<Vec>();
-		dots.add(new Vec(250,250));
-		dots.add(new Vec(250,350));
-		dots.add(new Vec(350,350));
-		dots.add(new Vec(350,250));
-		Bodies.add(new Shape(dots, new Vec(305,305)));
-		*/
-	
+
+//		c1 = new Circle(200, 200, 20);
+//		c2 = new Circle(300, 200, 50);
+//
+//		Bodies.add(c1);
+//		Bodies.add(c2);
+//		ArrayList<Vec> dots = new ArrayList<Vec>();
+//		dots.add(new Vec(250,250));
+//		dots.add(new Vec(250,350));
+//		dots.add(new Vec(350,350));
+//		dots.add(new Vec(350,250));
+//		Bodies.add(new Shape(dots, new Vec(305,305)));
+
 		for (int i = 1; i <= OBJECTS/2; i++) {
 			float width, height;
 			Random rand = new Random();
 			Vec pos = new Vec (rand.nextFloat()*GLOBAL_WIDTH,rand.nextFloat()*GLOBAL_HEIGHT);
 			width = rand.nextFloat()*MAX_WIDTH;
 			height = rand.nextFloat()*MAX_HEIGHT;
-			int dots = rand.nextInt(MAX_DOTS) ;
+//			int dots = rand.nextInt(MAX_DOTS) ;
 		}
 		
 		for (int i = 1; i <= OBJECTS/2; i++){
@@ -158,13 +157,13 @@ public class MAE implements ApplicationListener {
 				}
 		} 
 			// TEST
-			for (Body b : quad.retrieve(pointer,new ArrayList<Body>())){
-				ShapeRenderer sr = new ShapeRenderer();
-				sr.begin(ShapeType.Circle);
-				sr.setColor(0.8f, 0.3f, 0.3f, 1);
-				sr.circle(b.getPosition().x, b.getPosition().y, b.getRect().width/2+1);
-				sr.end();
-				}
+//			for (Body b : quad.retrieve(pointer,new ArrayList<Body>())){
+//				ShapeRenderer sr = new ShapeRenderer();
+//				sr.begin(ShapeType.Line);
+//				sr.setColor(0.8f, 0.3f, 0.3f, 1);
+//				sr.circle(b.getPosition().x, b.getPosition().y, b.getRect().width/2+1);
+//				sr.end();
+//				}
 			
 		} else {
 			Pressed = false;
